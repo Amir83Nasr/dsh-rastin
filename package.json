@@ -1,0 +1,44 @@
+{
+  "name": "@amir83nasr/rastin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rastin — Persian RTL layout (chat, queue, question cards) with IranYekanX face and FiraMono Nerd Font for the sidebar terminal",
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/self-check.mjs",
+    "test": "pnpm build && node scripts/self-check.mjs",
+    "prepack": "pnpm build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "setup": "git config core.hooksPath .githooks",
+    "preinstall": "npx -y only-allow pnpm"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "src/",
+    "client.js",
+    "locale/"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./src/cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout"
+      ]
+    }
+  },
+  "devDependencies": {
+    "prettier": "3.9.9"
+  }
+}

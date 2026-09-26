@@ -1,0 +1,3 @@
+#!/bin/sh
+# pre-push: build + self-check. Fix: pnpm test
+pnpm test --silent || exit 1

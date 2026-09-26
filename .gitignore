@@ -1,0 +1,25 @@
+# Rastin — Persian RTL + terminal font for DSH
+
+# Cordis bundle: RTL layout for chat/queue/question surfaces (IranYekanX),
+# FiraMono Nerd Font Mono for the sidebar terminal (xterm canvas patch).
+
+# ─── BUILD / DIST ─────────────────────────────────────────
+# client.js is generated — edit src/client.template.js, then rebuild:
+#   pnpm build && pnpm check
+/client.js
+
+# ─── DEPENDENCIES ─────────────────────────────────────────
+node_modules/
+
+# ─── LOGS / HISTORY / TELEMETRY ───────────────────────────
+*.log
+
+# ─── OS / EDITOR CLUTTER ──────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*~
+
+# ─── PERSONAL ──────────────────────────────────────────────
+TODO.md

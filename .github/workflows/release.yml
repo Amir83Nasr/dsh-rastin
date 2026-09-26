@@ -1,0 +1,37 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract notes from CHANGELOG.md
+        id: notes
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          hdr="## [$version]"
+          awk -v hdr="$hdr" '
+            index($0, hdr) == 1 && (length($0) == length(hdr) || substr($0, length(hdr) + 1, 1) == " ") { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if [ ! -s "$RUNNER_TEMP/notes.md" ]; then
+            echo "CHANGELOG.md has no section for $version" >&2
+            exit 1
+          fi
+          echo "notes-file=$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file "${{ steps.notes.outputs.notes-file }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

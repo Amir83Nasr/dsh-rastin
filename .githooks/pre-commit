@@ -1,0 +1,3 @@
+#!/bin/sh
+# pre-commit: block unformatted code. Fix: pnpm format
+pnpm exec prettier --check . || exit 1
