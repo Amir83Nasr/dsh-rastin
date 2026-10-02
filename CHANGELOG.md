@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-02
+
 ### Added
 
+- IranYekanX Bold (700) embedded alongside Regular, so Persian bold text
+  stops falling back to a system face.
 - Per-seat auto-direction: each message follows its own leading word run,
   so a real English opening (two-plus LTR words) reads LTR while a lone
   English term ("Merge کن") stays RTL (`src/direction.js`, covered by
-  `scripts/direction-check.mjs` with 32 fa/en/mixed/markup/script cases
+  `scripts/direction-check.mjs` with 37 fa/en/mixed/markup/script cases
   plus `scripts/orient-check.mjs` for streaming, lock, and idempotence).
 - Auto-direction covers `turn-error`, `turn-max-tokens`, and `model-retry`
   seats, so English failures ("This turn failed", "API key is invalid")

@@ -1,6 +1,6 @@
 {
   "name": "@amir83nasr/rastin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Rastin — Persian RTL layout (chat, queue, question cards) with IranYekanX face and FiraMono Nerd Font for the sidebar terminal",
   "type": "module",
