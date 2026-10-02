@@ -36,6 +36,12 @@ const cases = [
   ['Привет', 'ltr', 'cyrillic-ltr'],
   ['Οδυσσέας', 'ltr', 'greek-ltr'],
   ['This turn failed API key is invalid', 'ltr', 'turn-error-en'],
+  // Queue-dock mixes: counters and previews with Persian digits/units.
+  ['۳ مورد', 'rtl', 'fa-digits-with-unit'],
+  ['3 مورد در صف', 'rtl', 'latin-digit-then-fa-stays-rtl'],
+  ['Queue 3 مورد', 'rtl', 'lone-en-then-fa-counter-stays-rtl'],
+  ['Queued items 3 در انتظار', 'ltr', 'en-run-then-fa-counter-flips'],
+  ['پیش‌نمایش: Hello world', 'rtl', 'fa-label-then-en-stays-rtl'],
 ];
 
 for (const [text, expected, label] of cases) {

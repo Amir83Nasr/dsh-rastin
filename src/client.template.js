@@ -8,6 +8,10 @@ window.__ModuleLoader__.load({
     const FONT_B64 = '__IRANYEKAN_B64__';
     const FONT_BOLD_B64 = '__IRANYEKAN_BOLD_B64__';
     // FiraMono Nerd Font Mono Regular (terminal), woff2 data URI.
+    // ponytail: ceiling is full-file embed (~1.2MB of the ~1.7MB bundle);
+    // subsetting to ASCII+box-drawing would shrink it but drops the nerd
+    // icons the terminal actually renders. Upgrade path: subset only when
+    // an icon-inventory proves which PUA ranges xterm really draws.
     const TERMINAL_FONT_B64 = '__FIRAMONO_B64__';
 
     const css = `
@@ -181,6 +185,25 @@ window.__ModuleLoader__.load({
   unicode-bidi: isolate;
   text-align: left;
 }
+/* Selection inside RTL prose reads as one run; without an explicit rule the
+   host's LTR selection background can clip at bidi boundaries. */
+[data-chat-flow] ::selection,
+[data-queue-dock] ::selection,
+[data-question-key] ::selection,
+[data-plan-review-key] ::selection {
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 30%, transparent);
+}
+/* Persian digits and units inside queue counters inherit the seat's RTL so
+   "۳ مورد" never mirrors to "مورد ۳". */
+[data-queue-dock] [class*='count'] {
+  direction: inherit;
+  unicode-bidi: isolate;
+}
+/* Sidebar chrome (workspace header, session/history rows) has no host
+   data- hook and no slot seat, so no rule targets it: class-based selectors
+   would break on the next host rename.
+   ponytail: ceiling is host cooperation (a data- attr or slot on the
+   sidebar browser region); upgrade path: add the rule when DSH exposes one. */
 `;
 
     const TERMINAL_FACE = 'FiraMonoNerd';

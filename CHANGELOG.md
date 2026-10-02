@@ -39,6 +39,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (was `left`).
 - Product face restored app-wide (`:root --dsw-font-family`): the whole app
   reads IranYekanX again, not just the RTL surfaces.
+- LTR islands isolated (`unicode-bidi: isolate`), md/plan-preview RTL
+  fallback scoped behind `:not([dir])` so `orientSeat` verdicts win.
+- `::selection` tint + queue-counter bidi isolation for RTL runs.
+- FiraMono full-file embed documented as the ~1.7MB ceiling
+  (`client.js` size guard at 2MB); subsetting waits on an icon inventory.
+- Sidebar chrome (workspace header, session rows) deliberately untouched:
+  no host `data-` hook or slot seat exists — noted as a `ponytail` in the
+  template, pending host cooperation.
+- Queue-dock mixes covered: Persian digits/units and counter verdicts
+  (`direction-check` now 37 cases).
 
 ## [0.1.0] - 2026-09-26
 

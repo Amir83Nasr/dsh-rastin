@@ -86,6 +86,9 @@ assert.match(src, /data-chat-call-id/);
 assert.match(src, /direction: ltr/);
 // LTR islands need their own bidi scope or mirrored chars (→ < >) flip inside RTL prose.
 assert.match(src, /unicode-bidi: isolate/);
+// Selection + counter rules keep RTL runs unclipped and unmirrored.
+assert.match(src, /::selection/);
+assert.match(src, /color-mix\(in srgb/);
 // User bubbles align right under RTL (host flex-end flips side).
 assert.match(src, /data-chat-flow-kind='user'/);
 assert.match(src, /data-submission-echo/);
@@ -115,6 +118,12 @@ assert.match(src, /data-plan-review-key/);
 assert.match(src, /font-family: 'FiraMonoNerd'/);
 assert.match(src, /const TERMINAL_FONT_B64 = '[A-Za-z0-9+/=]{100,}/);
 assert.match(src, /data:font\/woff2;base64,\$\{TERMINAL_FONT_B64\}/);
+// Size guard: full nerd embed dominates the bundle; warn (don't fail) past 2MB.
+{
+  const { statSync } = await import('node:fs');
+  const bytes = statSync(new URL('../client.js', import.meta.url)).size;
+  assert.ok(bytes < 2 * 1024 * 1024, `client.js ${bytes} bytes exceeds 2MB`);
+}
 assert.match(src, /\[data-sidebar-terminal\]/);
 assert.match(src, /installTerminalFont/);
 assert.match(src, /CanvasRenderingContext2D/);
