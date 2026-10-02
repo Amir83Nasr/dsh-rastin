@@ -47,10 +47,11 @@ const mockCtx = {
 };
 mod.apply(mockCtx);
 
-// Style seat + terminal canvas-font patch + todo auto-open, all with cleanup.
+// Style seat + terminal canvas-font patch + auto-direction + todo auto-open, all with cleanup.
 assert.deepEqual(capturedEffects, [
   'rastin: style',
   'rastin: terminal-font',
+  'rastin: auto-direction',
   'rastin: todo open',
 ]);
 
@@ -65,6 +66,9 @@ assert.equal(typeof captured.regs[0].comp, 'function');
 const src = readFileSync(new URL('../client.js', import.meta.url), 'utf8');
 assert.match(src, /@font-face/);
 assert.match(src, /font-family: 'IRANYekanX'/);
+assert.match(src, /font-weight: 400/);
+assert.match(src, /font-weight: 700/);
+assert.match(src, /const FONT_BOLD_B64 = '[A-Za-z0-9+/=]{100,}/);
 assert.match(src, /--dsw-font-family: 'IRANYekanX'/);
 assert.match(src, /const FONT_B64 = '[A-Za-z0-9+/=]{100,}/);
 assert.match(src, /data:font\/woff2;base64,\$\{FONT_B64\}/);
@@ -85,6 +89,23 @@ assert.match(src, /data-chat-flow-kind='user'/);
 assert.match(src, /data-submission-echo/);
 assert.match(src, /data-message-attachments/);
 assert.match(src, /align-items: flex-start/);
+
+// Auto-direction: each message seat follows its own prose (islands excluded).
+assert.match(src, /installAutoDirection/);
+assert.match(src, /detectSeatDir/);
+assert.match(src, /orientSeat/);
+assert.match(src, /seatText/);
+assert.match(src, /SEAT_ISLAND/);
+// Build inlines src/direction.js: template must not carry its own verdict copy.
+assert.doesNotMatch(src, /detectSeatDir\(seat\.textContent/);
+assert.match(src, /text-align: start/);
+assert.match(src, /data-chat-flow-kind='turn-error'/);
+assert.match(src, /data-chat-flow-kind='turn-max-tokens'/);
+assert.match(src, /data-chat-flow-kind='model-retry'/);
+// Sidebar md preview + pre-approval plan preview + plan card text share the same leading-run direction.
+assert.match(src, /data-document-markdown/);
+assert.match(src, /data-plan-preview/);
+assert.match(src, /data-plan-review-key/);
 
 // Terminal face: FiraMonoNerd embedded, canvas patch scoped to sidebar terminal.
 assert.match(src, /font-family: 'FiraMonoNerd'/);

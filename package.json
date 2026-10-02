@@ -8,7 +8,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/self-check.mjs",
-    "test": "pnpm build && node scripts/self-check.mjs",
+    "test": "node scripts/direction-check.mjs && node scripts/orient-check.mjs && pnpm build && node scripts/self-check.mjs",
     "prepack": "pnpm build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

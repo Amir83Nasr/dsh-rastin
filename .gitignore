@@ -10,6 +10,7 @@
 
 # ─── DEPENDENCIES ─────────────────────────────────────────
 node_modules/
+.pnpm-store/
 
 # ─── LOGS / HISTORY / TELEMETRY ───────────────────────────
 *.log
