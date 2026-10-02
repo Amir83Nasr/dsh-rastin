@@ -102,15 +102,19 @@ window.__ModuleLoader__.load({
 [data-turn-process],
 [data-chat-running] {
   direction: ltr;
+  unicode-bidi: isolate;
   text-align: left;
   align-items: flex-start !important;
 }
 /* Sidebar md preview + pre-approval plan preview follow the same leading-run
    direction as chat seats: installAutoDirection writes their dir, start
    aligns the block to it. */
+[data-document-markdown]:not([dir]),
+[data-plan-preview]:not([dir]) {
+  direction: rtl;
+}
 [data-document-markdown],
 [data-plan-preview] {
-  direction: rtl;
   text-align: start;
   font-family: var(--dsw-font-family);
 }
@@ -153,16 +157,19 @@ window.__ModuleLoader__.load({
 [data-chat-flow] [data-chat-flow-kind='command'],
 [data-chat-flow] [data-chat-call-id] {
   direction: ltr;
+  unicode-bidi: isolate;
   text-align: left;
 }
 /* Edited-files card (end-of-turn report) stays LTR so paths and counts anchor left. */
 [data-chat-flow] [data-changed-files] {
   direction: ltr;
+  unicode-bidi: isolate;
   text-align: left;
 }
 /* Message action rows (copy, like/dislike, branch, clock) stay LTR so icon order anchors left. */
 [data-chat-flow] [data-clock] {
   direction: ltr;
+  unicode-bidi: isolate;
 }
 /* Code keeps LTR inside the RTL surfaces. */
 [data-chat-flow] pre, [data-chat-flow] code,
@@ -171,6 +178,7 @@ window.__ModuleLoader__.load({
 [data-document-markdown] pre, [data-document-markdown] code,
 [data-plan-preview] pre, [data-plan-preview] code {
   direction: ltr;
+  unicode-bidi: isolate;
   text-align: left;
 }
 `;

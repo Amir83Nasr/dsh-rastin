@@ -84,6 +84,8 @@ assert.match(src, /data-turn-process/);
 assert.match(src, /data-chat-flow-kind='tool-call'/);
 assert.match(src, /data-chat-call-id/);
 assert.match(src, /direction: ltr/);
+// LTR islands need their own bidi scope or mirrored chars (→ < >) flip inside RTL prose.
+assert.match(src, /unicode-bidi: isolate/);
 // User bubbles align right under RTL (host flex-end flips side).
 assert.match(src, /data-chat-flow-kind='user'/);
 assert.match(src, /data-submission-echo/);
@@ -105,6 +107,8 @@ assert.match(src, /data-chat-flow-kind='model-retry'/);
 // Sidebar md preview + pre-approval plan preview + plan card text share the same leading-run direction.
 assert.match(src, /data-document-markdown/);
 assert.match(src, /data-plan-preview/);
+// md fallback dir must not override installAutoDirection's dir (CSS beats dir attr).
+assert.match(src, /data-document-markdown\]:not\(\[dir\]\)/);
 assert.match(src, /data-plan-review-key/);
 
 // Terminal face: FiraMonoNerd embedded, canvas patch scoped to sidebar terminal.
