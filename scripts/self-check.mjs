@@ -99,6 +99,9 @@ assert.match(src, /align-items: flex-start/);
 assert.match(src, /installAutoDirection/);
 assert.match(src, /detectSeatDir/);
 assert.match(src, /orientSeat/);
+assert.match(src, /mirrorSeatArrows/);
+assert.match(src, /data-rastin-mirror/);
+assert.match(src, /scaleX\(-1\)/);
 assert.match(src, /seatText/);
 assert.match(src, /SEAT_ISLAND/);
 // Build inlines src/direction.js: template must not carry its own verdict copy.

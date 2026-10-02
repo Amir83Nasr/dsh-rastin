@@ -5,12 +5,47 @@
  * file); any drift here is a bug signal.
  */
 import assert from 'node:assert/strict';
-import { orientSeat } from '../src/direction.js';
+import { ARROW_PART, mirrorSeatArrows, orientSeat } from '../src/direction.js';
 
 const orient = orientSeat;
 
+function linkKid(parent, kid) {
+  kid.parent = parent;
+  kid.parentNode = parent;
+  kid.parentElement = parent;
+  if (typeof kid.replaceWith !== 'function') {
+    kid.replaceWith = function (...nodes) {
+      const i = parent.childNodes.indexOf(kid);
+      assert.notEqual(i, -1);
+      parent.childNodes.splice(i, 1, ...nodes);
+      for (const n of nodes) linkKid(parent, n);
+    };
+  }
+}
+
 function textNode(value, parent = null) {
-  return { nodeType: 3, nodeValue: value, parentElement: parent };
+  const node = { nodeType: 3, nodeValue: value, parentElement: parent };
+  node.parent = parent;
+  node.parentNode = parent;
+  return node;
+}
+
+function makeDoc() {
+  return {
+    createElement: (tag) => {
+      const map = new Map();
+      return {
+        nodeType: 1,
+        tagName: tag,
+        getAttribute: (k) => (map.has(k) ? map.get(k) : null),
+        setAttribute: (k, v) => {
+          map.set(k, v);
+        },
+        textContent: '',
+      };
+    },
+    createTextNode: (value) => textNode(value),
+  };
 }
 
 function elem(tag, { attrs = {}, children = [] } = {}) {
@@ -28,9 +63,10 @@ function elem(tag, { attrs = {}, children = [] } = {}) {
     matches: () => false,
     childNodes: children,
     textContent: '',
+    normalize: () => {},
   };
   for (const kid of children) {
-    kid.parent = node;
+    linkKid(node, kid);
     if (kid.nodeType === 3) node.textContent += kid.nodeValue ?? '';
     else node.textContent += kid.textContent ?? '';
   }
@@ -129,6 +165,43 @@ orient(enSeat);
 assert.equal(enSeat.getAttribute('dir'), 'ltr');
 assert.equal(enSeat.getAttribute('data-rastin-dir'), 'ltr');
 
+// Flow arrows in RTL prose wrap per glyph (copy intact, CSS flips them);
+// islands and LTR seats stay untouched.
+const arrowSeat = elem('div', {
+  attrs: { dir: 'rtl' },
+  children: [
+    textNode('ورودی از vpnmeter/__main__.py شروع می‌شود → Bot(cfg) → start()'),
+  ],
+});
+assert.equal(mirrorSeatArrows(arrowSeat, makeDoc()), 1);
+assert.equal(
+  arrowSeat.childNodes.filter(
+    (n) => n.getAttribute?.('data-rastin-mirror') != null,
+  ).length,
+  2,
+);
+assert.equal(
+  arrowSeat.childNodes.map((n) => n.textContent ?? n.nodeValue).join(''),
+  'ورودی از vpnmeter/__main__.py شروع می‌شود → Bot(cfg) → start()',
+);
+assert.equal(mirrorSeatArrows(arrowSeat, makeDoc()), 0);
+assert.ok(ARROW_PART.test('←') && ARROW_PART.test('⇒'));
+assert.equal(ARROW_PART.test('↔'), false);
+assert.equal(ARROW_PART.test('-'), false);
+
+const arrowLtr = elem('div', {
+  attrs: { dir: 'ltr' },
+  children: [textNode('a → b')],
+});
+assert.equal(mirrorSeatArrows(arrowLtr, makeDoc()), 0);
+assert.equal(arrowLtr.childNodes.length, 1);
+
+const arrowIsland = elem('div', {
+  attrs: { dir: 'rtl' },
+  children: [island('pre', 'a → b'), textNode('سلام دنیا')],
+});
+assert.equal(mirrorSeatArrows(arrowIsland, makeDoc()), 0);
+
 console.log(
-  'OK: auto-direction orient (streaming, lock, idempotent, fallback, islands)',
+  'OK: auto-direction orient (streaming, lock, idempotent, fallback, islands, arrow mirror)',
 );

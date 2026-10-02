@@ -125,7 +125,23 @@ window.__ModuleLoader__.load({
 /* Message text follows its own leading word run: installAutoDirection writes
    each seat's dir (two-plus LTR words from the start flip a mixed seat to
    LTR; a lone English term stays RTL), and start then aligns the block to
-   it. Layout (bubble side, row order) stays RTL either way. */
+   it. Layout (bubble side, row order) stays RTL either way. Flow arrows
+   (→ ⇒ …) get a per-glyph mirror span so they point the RTL way; the span
+   holds the exact char, so selection and copy stay intact. */
+[data-chat-flow] [data-chat-flow-kind='assistant-step'] [data-rastin-mirror],
+[data-chat-flow] [data-chat-flow-kind='user'] [data-rastin-mirror],
+[data-chat-flow] [data-chat-flow-kind='steering'] [data-rastin-mirror],
+[data-chat-flow] [data-chat-flow-kind='turn-error'] [data-rastin-mirror],
+[data-chat-flow] [data-chat-flow-kind='turn-max-tokens'] [data-rastin-mirror],
+[data-chat-flow] [data-chat-flow-kind='model-retry'] [data-rastin-mirror],
+[data-chat-flow] [data-submission-echo] [data-rastin-mirror],
+[data-chat-flow] [data-pending-steering] [data-rastin-mirror],
+[data-document-markdown] [data-rastin-mirror],
+[data-plan-preview] [data-rastin-mirror],
+[data-plan-review-key] [data-rastin-mirror] {
+  display: inline-block;
+  transform: scaleX(-1);
+}
 [data-chat-flow] [data-chat-flow-kind='assistant-step'],
 [data-chat-flow] [data-chat-flow-kind='user'],
 [data-chat-flow] [data-chat-flow-kind='steering'],
@@ -294,8 +310,11 @@ window.__ModuleLoader__.load({
         typeof MutationObserver === 'undefined'
       )
         return () => {};
-      // orientSeat inlined from src/direction.js above (single source).
-      const orient = (seat) => orientSeat(seat);
+      // orientSeat + mirrorSeatArrows inlined from src/direction.js above (single source).
+      const orient = (seat) => {
+        orientSeat(seat);
+        mirrorSeatArrows(seat, document);
+      };
       const sweep = () => {
         if (!document.querySelectorAll) return;
         for (const seat of document.querySelectorAll(SEAT_SELECTOR))
@@ -377,13 +396,18 @@ window.__ModuleLoader__.load({
         for (const seat of document.querySelectorAll(SEAT_SELECTOR)) {
           seat.removeAttribute('dir');
           seat.removeAttribute('data-rastin-dir');
+          for (const mirror of seat.querySelectorAll('[data-rastin-mirror]')) {
+            const text = document.createTextNode(mirror.textContent ?? '');
+            mirror.replaceWith(text);
+          }
+          seat.normalize?.();
         }
       };
     }
 
     // Host TodoPanel mounts collapsed (useState(true)) with no config switch,
-    // so open it once. One-shot: after the first panel opens, the observer
-    // disconnects and later collapses stay collapsed (user collapse respected).
+    // so open each panel on first sight. Per-panel once: later user collapse
+    // stays collapsed (panel already seen, no reopen on unrelated sweeps).
     // ponytail: ceiling is DOM-level (no slot prop exposes collapsed);
     // upgrade path: host option or shadow entry if host adds one.
     function autoOpenTodoPanels() {
@@ -392,35 +416,29 @@ window.__ModuleLoader__.load({
         typeof MutationObserver === 'undefined'
       )
         return () => {};
-      let done = false;
+      const seen = new WeakSet();
       let obs = null;
       const sweep = () => {
-        if (done || !document.querySelectorAll) return;
+        if (!document.querySelectorAll) return;
         for (const panel of document.querySelectorAll(
           '[data-testid="todo-panel"]',
         )) {
+          if (seen.has(panel)) continue;
+          seen.add(panel);
           const btn =
             typeof panel.querySelector === 'function'
               ? panel.querySelector(
                   ':scope > button[aria-expanded="false"], :scope button[aria-expanded="false"]',
                 )
               : null;
-          if (btn !== null && btn !== undefined) {
-            btn.click();
-            done = true;
-            if (obs) obs.disconnect();
-            break;
-          }
+          if (btn !== null && btn !== undefined) btn.click();
         }
       };
       sweep();
-      if (!done) {
-        obs = new MutationObserver(sweep);
-        if (document.body)
-          obs.observe(document.body, { childList: true, subtree: true });
-      }
+      obs = new MutationObserver(sweep);
+      if (document.body)
+        obs.observe(document.body, { childList: true, subtree: true });
       return () => {
-        done = true;
         if (obs) obs.disconnect();
       };
     }

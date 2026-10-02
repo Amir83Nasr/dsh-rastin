@@ -8,6 +8,7 @@ Cordis bundle for the DeepSeek Harness Web GUI: Persian RTL layout with embedded
 - **Sidebar terminal font** — FiraMono Nerd Font Mono. xterm draws on canvas, so CSS alone can't restyle glyphs; the bundle embeds the face and patches the canvas 2d `font` setter scoped to `[data-sidebar-terminal]`.
 - **Todo dock opens by default** — host mounts it collapsed; the bundle clicks it open once (user can re-collapse).
 - **LTR islands** — code blocks, tool-call/command rows, changed-files cards, and process-status labels stay LTR inside the RTL surfaces.
+- **RTL arrow mirror** — flow arrows (← → ⇐ ⇒) in RTL prose point the RTL way via a per-glyph mirror span; copy text stays intact.
 
 ## Requirements
 

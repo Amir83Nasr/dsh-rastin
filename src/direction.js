@@ -113,3 +113,68 @@ export function orientSeat(seat) {
   seat.setAttribute('dir', verdict.dir);
   return 'write';
 }
+
+// Flow arrows mirrored in RTL prose (glyph flip, copy intact). CSS cannot
+// retarget one char, so each arrow gets an inline-block mirror span holding
+// the exact char. Only the four directional arrows: symmetric ↔/⇔ need no
+// mirror, ASCII "->"/"=>" need whole-token wrapping (per-char mirror would
+// break them).
+// ponytail: ceiling is full arrow ranges + ASCII tokens; upgrade path:
+// widen ARROW_PART (ASCII needs token match, not per-char).
+export const ARROW_PART = /([←→⇐⇒])/u;
+
+/**
+ * Mirror flow arrows of an RTL seat, unwrap on LTR (shared by the bundle +
+ * orient-check; the bundle inlines this file, tests import it).
+ * @param seat - message seat element.
+ * @param doc - node factory (defaults to the seat's ownerDocument).
+ * @returns wrapped/unwrapped node count (0 when already correct).
+ */
+export function mirrorSeatArrows(seat, doc = seat?.ownerDocument) {
+  if (!doc || typeof doc.createElement !== 'function') return 0;
+  const rtl = seat.getAttribute?.('dir') !== 'ltr';
+  const roots = seat.childNodes;
+  if (!roots || typeof roots.length !== 'number') return 0;
+  const stack = [...roots].reverse();
+  let changed = 0;
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node.nodeType === 1) {
+      if (
+        typeof node.getAttribute === 'function' &&
+        node.getAttribute('data-rastin-mirror') !== null
+      ) {
+        if (!rtl) {
+          node.replaceWith(doc.createTextNode(node.textContent ?? ''));
+          changed += 1;
+        }
+        continue;
+      }
+      if (typeof node.matches === 'function' && node.matches(SEAT_ISLAND))
+        continue;
+      if (node.childNodes?.length)
+        for (let i = node.childNodes.length - 1; i >= 0; i--)
+          stack.push(node.childNodes[i]);
+    } else if (node.nodeType === 3 && rtl) {
+      const text = node.nodeValue ?? '';
+      if (!ARROW_PART.test(text)) continue;
+      const nodes = [];
+      for (const part of text.split(ARROW_PART)) {
+        if (part === '') continue;
+        if (ARROW_PART.test(part)) {
+          const span = doc.createElement('span');
+          span.setAttribute('data-rastin-mirror', '');
+          span.textContent = part;
+          nodes.push(span);
+        } else {
+          nodes.push(doc.createTextNode(part));
+        }
+      }
+      node.replaceWith(...nodes);
+      changed += 1;
+    }
+  }
+  // Merge split text runs back after an unwrap so streaming diffs stay cheap.
+  if (!rtl) seat.normalize?.();
+  return changed;
+}

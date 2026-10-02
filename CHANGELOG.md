@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-02
+
+### Fixed
+
+- Flow arrows (← → ⇐ ⇒) in RTL prose now point the RTL way: each arrow
+  gets a per-glyph mirror span (`data-rastin-mirror`, `scaleX(-1)`), so
+  `ورودی … → Bot(cfg) → start()` reads right-to-left end to end. Span
+  holds the exact char, so selection and copy stay intact. Covered by
+  `orient-check` (wrap, idempotence, LTR-seat and island exclusion) and
+  the `self-check` wiring assertions.
+
 ## [0.2.0] - 2026-10-02
 
 ### Added
