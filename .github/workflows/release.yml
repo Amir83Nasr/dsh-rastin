@@ -46,18 +46,32 @@ jobs:
           fi
           echo "notes-file=$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub Release
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file "${{ steps.notes.outputs.notes-file }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       # prepack rebuilds client.js from src/ + fonts/, so the tarball matches the tag.
       # Auth: npm trusted publishing (OIDC via `id-token: write`). One-time setup:
-      # publish 0.3.0 manually, then npmjs.com → package Settings → Trusted
-      # Publisher → GitHub Actions, repo `Amir83Nasr/dsh-rastin`, workflow
-      # `release.yml`. Token alternative: set the NPM_TOKEN secret and uncomment
-      # the env line below (an empty NODE_AUTH_TOKEN disables OIDC).
+      # npmjs.com → package Settings → Trusted Publisher → GitHub Actions, repo
+      # `Amir83Nasr/dsh-rastin`, workflow `release.yml`. Token alternative: set the
+      # NPM_TOKEN secret and uncomment the env line (an empty NODE_AUTH_TOKEN
+      # disables OIDC, so use one mechanism at a time).
       - name: Publish to npm
-        run: npm publish --provenance --access public
+        id: publish
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          if npm view "@amir83nasr/dsh-rastin@$v" version >/dev/null 2>&1; then
+            echo "@amir83nasr/dsh-rastin@$v already on npm — skipping"
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+          else
+            npm publish --provenance --access public
+          fi
         # env:
         #   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "release $GITHUB_REF_NAME already exists — skipping"
+          else
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" \
+              --notes-file "${{ steps.notes.outputs.notes-file }}" --verify-tag
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

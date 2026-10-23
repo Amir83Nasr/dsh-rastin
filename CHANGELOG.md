@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `release.yml` publishes to npm on every `v*.*.*` tag push (trusted
+  publishing / OIDC, with an optional `NPM_TOKEN` fallback), after checking the
+  tag matches `package.json` and that the version isn't already on npm.
+  Both publish and GitHub-Release steps are idempotent, so re-running a tag is
+  safe.
+
 ## [0.3.0] - 2026-10-23
 
 ### Changed
