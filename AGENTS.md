@@ -27,11 +27,13 @@ use PNPM instead of NPM.
   1. The package must already exist on npm. It does (`@amir83nasr/dsh-rastin`,
      placeholder `0.0.0-stage`); a first manual `npm publish` does it otherwise.
   2. npmjs.com → the package → Settings → **Trusted Publisher** → GitHub Actions:
-     repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`.
-     After that, tag pushes publish with no credentials. Alternative: add an
-     `NPM_TOKEN` repo secret and uncomment the `env:` line in the publish step
-     (an empty `NODE_AUTH_TOKEN` disables OIDC, so only one mechanism at a time).
-     Until one of the two is set up, the publish step fails with `ENEEDAUTH`.
+     repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`. The connection must make
+     a first successful publish within 2 days or it expires.
+     After that, tag pushes publish with no credentials (provenance is automatic;
+     the workflow must not set `registry-url` — an empty `_authToken` in `.npmrc`
+     makes npm skip OIDC). Alternative: add an `NPM_TOKEN` repo secret and
+     uncomment the `env:` line in the publish step. Until one of the two is set
+     up, the publish step fails with `ENEEDAUTH`.
 - Tag pushes must be explicit (`git push origin vX.Y.Z`); `--follow-tags` skips
   lightweight tags. Use annotated tags (`git tag -a`).
 - A failed publish (e.g. version already taken) leaves the GitHub Release

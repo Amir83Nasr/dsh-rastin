@@ -15,10 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No `registry-url` here on purpose: setup-node would write an empty
+      # `_authToken` line to .npmrc, which makes npm skip OIDC auth.
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
 
       - name: Check tag matches package version
         run: |
@@ -47,11 +48,11 @@ jobs:
           echo "notes-file=$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
 
       # prepack rebuilds client.js from src/ + fonts/, so the tarball matches the tag.
-      # Auth: npm trusted publishing (OIDC via `id-token: write`). One-time setup:
-      # npmjs.com → package Settings → Trusted Publisher → GitHub Actions, repo
-      # `Amir83Nasr/dsh-rastin`, workflow `release.yml`. Token alternative: set the
-      # NPM_TOKEN secret and uncomment the env line (an empty NODE_AUTH_TOKEN
-      # disables OIDC, so use one mechanism at a time).
+      # Auth: npm trusted publishing (OIDC via `id-token: write`), no token needed;
+      # provenance is automatic for a public repo + public package. One-time setup:
+      # npmjs.com → package Settings → Trusted Publisher → GitHub Actions, with
+      # repo `Amir83Nasr/dsh-rastin` and workflow `release.yml`. Token alternative:
+      # set the NPM_TOKEN secret and uncomment the env line below.
       - name: Publish to npm
         id: publish
         run: |
