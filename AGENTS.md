@@ -27,9 +27,9 @@ use PNPM instead of NPM.
      offers trusted publishers for a package that already exists.
   2. npmjs.com → the package → Settings → **Trusted Publisher** → GitHub Actions:
      repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`.
-  After that, tag pushes publish with no credentials. Alternative: add an
-  `NPM_TOKEN` repo secret and uncomment the `env:` line in the publish step
-  (an empty `NODE_AUTH_TOKEN` disables OIDC, so only one mechanism at a time).
+     After that, tag pushes publish with no credentials. Alternative: add an
+     `NPM_TOKEN` repo secret and uncomment the `env:` line in the publish step
+     (an empty `NODE_AUTH_TOKEN` disables OIDC, so only one mechanism at a time).
 - Tag pushes must be explicit (`git push origin vX.Y.Z`); `--follow-tags` skips
   lightweight tags. Use annotated tags (`git tag -a`).
 - A failed publish (e.g. version already taken) leaves the GitHub Release
