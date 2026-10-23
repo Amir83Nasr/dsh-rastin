@@ -7,12 +7,27 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Check tag matches package version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag v$tag does not match package.json $pkg" >&2
+            exit 1
+          fi
 
       - name: Extract notes from CHANGELOG.md
         id: notes
@@ -35,3 +50,13 @@ jobs:
         run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file "${{ steps.notes.outputs.notes-file }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # prepack rebuilds client.js from src/ + fonts/, so the tarball matches the tag.
+      # Auth: npm trusted publishing (OIDC, `id-token: write` above) — one-time
+      # setup on npmjs.com: Package → Settings → Trusted Publisher → GitHub Actions,
+      # repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`. Falls back to an
+      # `NPM_TOKEN` secret when one is set.
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

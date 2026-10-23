@@ -19,8 +19,18 @@ use PNPM instead of NPM.
 ## PUBLISH (npm)
 
 - Package: `@amir83nasr/dsh-rastin` (scoped, public via `publishConfig.access`).
-- One-time: `npm login` (2FA prompt as configured), and the account must own the `@amir83nasr` scope.
-- Before every publish: `pnpm test` and `npm pack --dry-run` (must list `client.js`, `src/`, `locale/`, `icons/`).
-- Publish from a clean tree on the tagged commit: `pnpm publish --no-git-checks` (or `npm publish`).
-- `prepack` rebuilds `client.js`, so the tarball always carries the current bundle; never commit `client.js`.
-- No `preinstall`/`install` scripts in `package.json`: consumers may install with npm, and a `pnpm` guard would break them.
+- **Automatic:** pushing a `v*.*.*` tag runs `release.yml`, which verifies the tag
+  matches `package.json`, creates the GitHub Release, then runs `npm publish`
+  (with provenance). No manual publish needed.
+- One-time setup on npmjs.com → Package Settings → **Trusted Publisher** →
+  GitHub Actions: repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`
+  (OIDC, no token). Alternative: add an `NPM_TOKEN` repo secret — the workflow
+  reads `secrets.NPM_TOKEN` as `NODE_AUTH_TOKEN` when present.
+- Tag pushes must be explicit (`git push origin vX.Y.Z`); `--follow-tags` skips
+  lightweight tags.
+- A failed publish (e.g. version already taken) leaves the GitHub Release
+  created; bump the version and push a new tag rather than reusing the old one.
+- `prepack` rebuilds `client.js`, so the tarball always carries the current
+  bundle; never commit `client.js`.
+- No `preinstall`/`install` scripts in `package.json`: consumers may install
+  with npm, and a `pnpm` guard would break them.
