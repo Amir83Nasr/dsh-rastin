@@ -19,17 +19,19 @@ use PNPM instead of NPM.
 ## PUBLISH (npm)
 
 - Package: `@amir83nasr/dsh-rastin` (scoped, public via `publishConfig.access`).
-- **Automatic:** pushing a `v*.*.*` tag runs `release.yml`, which verifies the tag
-  matches `package.json`, creates the GitHub Release, then runs `npm publish`
-  with provenance.
+- **Automatic:** pushing a `v*.*.*` tag runs `release.yml`: it checks the tag
+  matches `package.json`, publishes to npm with provenance when that version
+  isn't on the registry yet, then creates the GitHub Release. Both steps skip
+  when the artifact already exists, so a re-run is safe.
 - **Auth — npm trusted publishing (OIDC, no long-lived secret).** One-time setup:
-  1. Publish the first release manually (`npm login && npm publish`) — npm only
-     offers trusted publishers for a package that already exists.
+  1. The package must already exist on npm. It does (`@amir83nasr/dsh-rastin`,
+     placeholder `0.0.0-stage`); a first manual `npm publish` does it otherwise.
   2. npmjs.com → the package → Settings → **Trusted Publisher** → GitHub Actions:
      repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`.
      After that, tag pushes publish with no credentials. Alternative: add an
      `NPM_TOKEN` repo secret and uncomment the `env:` line in the publish step
      (an empty `NODE_AUTH_TOKEN` disables OIDC, so only one mechanism at a time).
+     Until one of the two is set up, the publish step fails with `ENEEDAUTH`.
 - Tag pushes must be explicit (`git push origin vX.Y.Z`); `--follow-tags` skips
   lightweight tags. Use annotated tags (`git tag -a`).
 - A failed publish (e.g. version already taken) leaves the GitHub Release
