@@ -1,5 +1,5 @@
 window.__ModuleLoader__.load({
-  id: '@amir83nasr/rastin',
+  id: '@amir83nasr/dsh-rastin',
   factory(require) {
     const React = require('react');
     const h = React.createElement;
@@ -240,7 +240,7 @@ window.__ModuleLoader__.load({
       if (proto.__rastinFontPatched)
         return proto.__rastinFontPatchedCleanup ?? (() => {});
       const set = desc.set;
-      Object.defineProperty(proto, 'font', {
+      const wrapper = {
         configurable: true,
         get: desc.get,
         set(v) {
@@ -262,13 +262,16 @@ window.__ModuleLoader__.load({
           }
           set.call(this, v);
         },
-      });
+      };
+      Object.defineProperty(proto, 'font', wrapper);
       proto.__rastinFontPatched = true;
       if (document.fonts && document.fonts.load) {
         document.fonts.load(`13px "${TERMINAL_FACE}"`).catch(() => {});
       }
       const cleanup = () => {
-        if (Object.getOwnPropertyDescriptor(proto, 'font')?.set === set) return; // third-party replaced our patch — don't clobber theirs.
+        // Only undo our own patch; a third-party replacement stays untouched.
+        if (Object.getOwnPropertyDescriptor(proto, 'font')?.set !== wrapper.set)
+          return;
         Object.defineProperty(proto, 'font', desc);
         delete proto.__rastinFontPatched;
         delete proto.__rastinFontPatchedCleanup;

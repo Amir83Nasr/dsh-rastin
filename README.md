@@ -1,4 +1,4 @@
-<p align="center"><img src="icons/readme.png" width="128" alt="Rastin icon" /></p>
+<p align="left"><img src="icons/readme.png" width="128" alt="Rastin icon" /></p>
 
 # Rastin
 
@@ -11,6 +11,12 @@ Cordis bundle for the DeepSeek Harness Web GUI: Persian RTL layout with embedded
 - **Todo dock opens by default** — host mounts it collapsed; the bundle clicks it open once (user can re-collapse).
 - **LTR islands** — code blocks, tool-call/command rows, changed-files cards, and process-status labels stay LTR inside the RTL surfaces.
 - **RTL arrow mirror** — flow arrows (← → ⇐ ⇒) in RTL prose point the RTL way via a per-glyph mirror span; copy text stays intact.
+
+## Install
+
+```sh
+pnpm add @amir83nasr/dsh-rastin
+```
 
 ## Requirements
 
@@ -36,7 +42,7 @@ Edit `src/client.template.js` — never `client.js` directly.
 
 - `src/client.template.js` — editable source (placeholders `__IRANYEKAN_B64__`, `__FIRAMONO_B64__`).
 - `src/index.js` — host half (no rendering).
-- `src/cordis.patch.yml` — bundle slot patch (`rastin` / `@amir83nasr/rastin`).
+- `src/cordis.patch.yml` — bundle slot patch (`rastin` / `@amir83nasr/dsh-rastin`).
 - `scripts/build.mjs` — template + fonts → `client.js`.
 - `scripts/self-check.mjs` — behavioral wiring check.
 - `fonts/` — embedded faces (`.woff2`).

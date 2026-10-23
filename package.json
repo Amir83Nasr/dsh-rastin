@@ -1,26 +1,44 @@
 {
-  "name": "@amir83nasr/rastin",
-  "version": "0.2.2",
-  "private": true,
+  "name": "@amir83nasr/dsh-rastin",
+  "version": "0.3.0",
   "license": "MIT",
   "description": "Rastin — Persian RTL layout (chat, queue, question cards) with IranYekanX face and FiraMono Nerd Font for the sidebar terminal",
   "type": "module",
   "icon": "./icons/readme.png",
+  "keywords": [
+    "dsh",
+    "cordis",
+    "bundle",
+    "rtl",
+    "persian",
+    "farsi",
+    "iran-yekan"
+  ],
+  "author": "Amir Hossein Nasrollahi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Amir83Nasr/dsh-rastin.git"
+  },
+  "homepage": "https://github.com/Amir83Nasr/dsh-rastin#readme",
+  "bugs": "https://github.com/Amir83Nasr/dsh-rastin/issues",
+  "publishConfig": {
+    "access": "public"
+  },
   "packageManager": "pnpm@12.6.0",
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/self-check.mjs",
     "test": "node scripts/direction-check.mjs && node scripts/orient-check.mjs && pnpm build && node scripts/self-check.mjs",
-    "prepack": "pnpm build",
+    "prepack": "node scripts/build.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "setup": "git config core.hooksPath .githooks",
-    "preinstall": "npx -y only-allow pnpm"
+    "setup": "git config core.hooksPath .githooks"
   },
   "exports": {
     ".": "./src/index.js",
     "./client": "./client.js",
     "./package.json": "./package.json",
+    "./src/cordis.patch.yml": "./src/cordis.patch.yml",
     "./locale/*.json": "./locale/*.json"
   },
   "files": [

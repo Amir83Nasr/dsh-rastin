@@ -3,7 +3,35 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const captured = { regs: [] };
+
+// Minimal DOM so the canvas-font patch runs for real (seat sweep finds none).
+const seatList = [];
+globalThis.document = {
+  body: null,
+  querySelectorAll: () => seatList,
+  createElement: () => ({
+    nodeType: 1,
+    childNodes: [],
+    setAttribute() {},
+    getAttribute: () => null,
+    matches: () => false,
+  }),
+  createTextNode: (text) => ({ nodeType: 3, nodeValue: text }),
+  fonts: { load: () => Promise.resolve() },
+};
+function CanvasRenderingContext2D() {}
+Object.defineProperty(CanvasRenderingContext2D.prototype, 'font', {
+  configurable: true,
+  get() {
+    return '13px monospace';
+  },
+  set(value) {
+    this._font = value;
+  },
+});
+
 globalThis.window = {
+  CanvasRenderingContext2D,
   __ModuleLoader__: {
     load: (arg) => {
       captured.bundle = arg;
@@ -13,7 +41,7 @@ globalThis.window = {
 
 await import('../client.js');
 const factory = captured.bundle.factory;
-assert.equal(captured.bundle.id, '@amir83nasr/rastin');
+assert.equal(captured.bundle.id, '@amir83nasr/dsh-rastin');
 
 const ReactStub = {
   createElement: (type, props, ...children) => ({ type, props, children }),
@@ -54,6 +82,34 @@ assert.deepEqual(capturedEffects, [
   'rastin: auto-direction',
   'rastin: todo open',
 ]);
+
+// Canvas font patch: rewrites only sidebar-terminal canvases, restores on cleanup.
+{
+  const proto = CanvasRenderingContext2D.prototype;
+  assert.equal(proto.__rastinFontPatched, true);
+  const term = new CanvasRenderingContext2D();
+  term.canvas = {
+    closest: (sel) => (sel === '[data-sidebar-terminal]' ? {} : null),
+  };
+  term.font = '13px monospace';
+  assert.equal(term._font, "13px 'FiraMonoNerd', monospace");
+  term.font = '13px ui-monospace, monospace';
+  assert.equal(term._font, "13px 'FiraMonoNerd', ui-monospace, monospace");
+  term.font = "13px 'FiraMonoNerd', monospace";
+  assert.equal(term._font, "13px 'FiraMonoNerd', monospace");
+  const bare = new CanvasRenderingContext2D();
+  bare.font = '13px monospace';
+  assert.equal(bare._font, '13px monospace');
+  assert.equal(typeof proto.__rastinFontPatchedCleanup, 'function');
+  proto.__rastinFontPatchedCleanup();
+  assert.equal(proto.__rastinFontPatched, undefined);
+  assert.equal(
+    Object.getOwnPropertyDescriptor(proto, 'font').get.call(
+      new CanvasRenderingContext2D(),
+    ),
+    '13px monospace',
+  );
+}
 
 // One global style entry on shell.overlay with no replace risk.
 assert.equal(captured.owner, 'shell.overlay');

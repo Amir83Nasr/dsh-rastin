@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-23
+
+### Changed
+
+- **Breaking:** package renamed `@amir83nasr/rastin` → `@amir83nasr/dsh-rastin`
+  (bundle id and cordis patch included), matching the repo name.
+- Publishable to npm: `private` dropped, `publishConfig.access: public`,
+  plus `keywords`, `author`, `repository`, `homepage`, `bugs`.
+- `prepack` runs `node scripts/build.mjs` directly, so packing works under
+  npm as well as pnpm; the pnpm-only `preinstall` guard is gone so npm
+  consumers can install.
+- `exports` gains `./src/cordis.patch.yml` for direct patch resolution.
+- README gains an Install section; AGENTS.md documents the npm publish flow.
+
+### Fixed
+
+- Canvas `font` patch cleanup compared the saved native setter instead of
+  the wrapper, so it returned early and never restored the prototype.
+  Cleanup now compares the installed wrapper (still leaving third-party
+  replacements alone); `self-check` exercises patch, rewrite, and restore.
+
 ## [0.2.2] - 2026-10-23
 
 ### Added
