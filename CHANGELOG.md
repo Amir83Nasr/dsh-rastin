@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-23
+
+### Added
+
+- Package icon (`icons/`) wired to the `icon` field and shipped via `files`,
+  with a matching header image in `README.md`.
+- MIT `LICENCE.md`.
+
 ## [0.2.1] - 2026-10-02
 
 ### Fixed

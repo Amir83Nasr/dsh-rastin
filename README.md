@@ -1,3 +1,5 @@
+<p align="center"><img src="icons/readme.png" width="128" alt="Rastin icon" /></p>
+
 # Rastin
 
 Cordis bundle for the DeepSeek Harness Web GUI: Persian RTL layout with embedded fonts.
