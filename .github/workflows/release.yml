@@ -52,11 +52,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # prepack rebuilds client.js from src/ + fonts/, so the tarball matches the tag.
-      # Auth: npm trusted publishing (OIDC, `id-token: write` above) — one-time
-      # setup on npmjs.com: Package → Settings → Trusted Publisher → GitHub Actions,
-      # repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`. Falls back to an
-      # `NPM_TOKEN` secret when one is set.
+      # Auth: npm trusted publishing (OIDC via `id-token: write`). One-time setup:
+      # publish 0.3.0 manually, then npmjs.com → package Settings → Trusted
+      # Publisher → GitHub Actions, repo `Amir83Nasr/dsh-rastin`, workflow
+      # `release.yml`. Token alternative: set the NPM_TOKEN secret and uncomment
+      # the env line below (an empty NODE_AUTH_TOKEN disables OIDC).
       - name: Publish to npm
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # env:
+        #   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

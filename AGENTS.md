@@ -21,13 +21,17 @@ use PNPM instead of NPM.
 - Package: `@amir83nasr/dsh-rastin` (scoped, public via `publishConfig.access`).
 - **Automatic:** pushing a `v*.*.*` tag runs `release.yml`, which verifies the tag
   matches `package.json`, creates the GitHub Release, then runs `npm publish`
-  (with provenance). No manual publish needed.
-- One-time setup on npmjs.com → Package Settings → **Trusted Publisher** →
-  GitHub Actions: repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`
-  (OIDC, no token). Alternative: add an `NPM_TOKEN` repo secret — the workflow
-  reads `secrets.NPM_TOKEN` as `NODE_AUTH_TOKEN` when present.
+  with provenance.
+- **Auth — npm trusted publishing (OIDC, no long-lived secret).** One-time setup:
+  1. Publish the first release manually (`npm login && npm publish`) — npm only
+     offers trusted publishers for a package that already exists.
+  2. npmjs.com → the package → Settings → **Trusted Publisher** → GitHub Actions:
+     repo `Amir83Nasr/dsh-rastin`, workflow `release.yml`.
+  After that, tag pushes publish with no credentials. Alternative: add an
+  `NPM_TOKEN` repo secret and uncomment the `env:` line in the publish step
+  (an empty `NODE_AUTH_TOKEN` disables OIDC, so only one mechanism at a time).
 - Tag pushes must be explicit (`git push origin vX.Y.Z`); `--follow-tags` skips
-  lightweight tags.
+  lightweight tags. Use annotated tags (`git tag -a`).
 - A failed publish (e.g. version already taken) leaves the GitHub Release
   created; bump the version and push a new tag rather than reusing the old one.
 - `prepack` rebuilds `client.js`, so the tarball always carries the current
