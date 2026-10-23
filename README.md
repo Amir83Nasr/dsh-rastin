@@ -1,4 +1,4 @@
-<p align="left"><img src="icons/readme.png" width="128" alt="Rastin icon" /></p>
+<p align="left"><img src="https://raw.githubusercontent.com/Amir83Nasr/dsh-rastin/main/icons/readme.png" width="128" alt="Rastin icon" /></p>
 
 # Rastin
 
