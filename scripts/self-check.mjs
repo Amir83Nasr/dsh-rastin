@@ -126,6 +126,9 @@ assert.match(src, /font-weight: 400/);
 assert.match(src, /font-weight: 700/);
 assert.match(src, /const FONT_BOLD_B64 = '[A-Za-z0-9+/=]{100,}/);
 assert.match(src, /--dsw-font-family: 'IRANYekanX'/);
+// Host body re-declares --dsw-font-family (shadowing :root) and its base font
+// rule reads --dsh-font-family-text, so :root must set that hook as well.
+assert.match(src, /--dsh-font-family-text: 'IRANYekanX'/);
 assert.match(src, /const FONT_B64 = '[A-Za-z0-9+/=]{100,}/);
 assert.match(src, /data:font\/woff2;base64,\$\{FONT_B64\}/);
 assert.doesNotMatch(src, /__RASTIN_FONT_B64__/);

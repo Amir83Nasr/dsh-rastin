@@ -43,8 +43,16 @@ window.__ModuleLoader__.load({
 [data-sidebar-terminal] .xterm-rows {
   font-family: 'FiraMonoNerd', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
 }
-/* Product face for the whole app (host reads --dsw-font-family everywhere). */
+/* Product face for the whole app. The host theme re-declares --dsw-font-family
+   on body (which shadows any :root value for the entire subtree) and its base
+   font rule reads --dsh-font-family-text, so :root must set that hook too;
+   the host's own body rule then resolves to IRANYekanX. An explicit user font
+   choice in settings (body inline style) still wins, which is the correct
+   precedence. */
 :root {
+  --dsh-font-family-text: 'IRANYekanX', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica,
+    Arial, sans-serif;
   --dsw-font-family: 'IRANYekanX', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }

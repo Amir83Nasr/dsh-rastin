@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Product font (IranYekanX) never applied: the host theme re-declares
+  `--dsw-font-family` on `body` (shadowing the bundle's `:root` value for the
+  whole subtree) and its base font rule reads `--dsh-font-family-text`. The
+  bundle's `:root` rule now sets that hook too, so the host's own body rule
+  resolves to IranYekanX. `self-check` asserts the hook stays present.
+
 ### Added
 
 - `release.yml` publishes to npm on every `v*.*.*` tag push (trusted
