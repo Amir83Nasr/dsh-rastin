@@ -1,6 +1,6 @@
 {
   "name": "@amir83nasr/dsh-rastin",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "description": "Rastin — Persian RTL layout (chat, queue, question cards) with IranYekanX face and FiraMono Nerd Font for the sidebar terminal",
   "type": "module",

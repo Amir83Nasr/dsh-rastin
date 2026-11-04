@@ -40,7 +40,8 @@ Edit `src/client.template.js` — never `client.js` directly.
 
 ## Files
 
-- `src/client.template.js` — editable source (placeholders `__IRANYEKAN_B64__`, `__FIRAMONO_B64__`).
+- `src/client.template.js` — editable source (placeholders `__IRANYEKAN_B64__`, `__FIRAMONO_B64__`, `/*__RASTIN_DIRECTION__*/`).
+- `src/direction.js` — seat-direction logic, inlined into the bundle, covered by `direction-check` + `orient-check`.
 - `src/index.js` — host half (no rendering).
 - `src/cordis.patch.yml` — bundle slot patch (`rastin` / `@amir83nasr/dsh-rastin`).
 - `scripts/build.mjs` — template + fonts → `client.js`.
