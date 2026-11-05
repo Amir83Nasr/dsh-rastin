@@ -491,34 +491,6 @@ window.__ModuleLoader__.load({
       };
     }
 
-    // Voice-input preferences render each provider language as
-    // <option value="fa">fa</option> (the host has no Persian display
-    // name for it), so paint it as فارسی on sight. Scoped to the exact
-    // value our provider registers; other options stay untouched.
-    // ponytail: ceiling is DOM-level (no slot prop exposes option labels);
-    // upgrade path: host languageNames entry for fa when DSH adds one.
-    function relabelFaLanguage() {
-      if (
-        typeof document === 'undefined' ||
-        typeof MutationObserver === 'undefined'
-      )
-        return () => {};
-      const LABEL = 'فارسی';
-      const paint = () => {
-        if (!document.querySelectorAll) return;
-        for (const option of document.querySelectorAll('option[value="fa"]')) {
-          if (option.textContent !== LABEL) option.textContent = LABEL;
-        }
-      };
-      paint();
-      const obs = new MutationObserver(paint);
-      if (document.body)
-        obs.observe(document.body, { childList: true, subtree: true });
-      return () => {
-        obs.disconnect();
-      };
-    }
-
     return {
       inject: ['slots'],
       apply(ctx) {
@@ -535,7 +507,6 @@ window.__ModuleLoader__.load({
         ctx.effect(() => installTerminalFont(), 'rastin: terminal-font');
         ctx.effect(() => installAutoDirection(), 'rastin: auto-direction');
         ctx.effect(() => autoOpenTodoPanels(), 'rastin: todo open');
-        ctx.effect(() => relabelFaLanguage(), 'rastin: fa-label');
       },
     };
   },

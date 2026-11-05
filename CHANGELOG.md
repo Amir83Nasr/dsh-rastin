@@ -7,20 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Persian voice input: the host half now registers a `rastin-fa-local`
-  `speechToText` provider backed by multilingual Whisper base (int8) via
-  `sherpa-onnx-node`, with explicit `fa` / `auto` hints. DSH's built-in
-  SenseVoice provider only accepts zh/en/ja/ko/yue and mishears Persian
-  as English, so Persian gets its own provider with an on-demand ~160 MB
-  model download (sha256-pinned) under `speech-to-text/rastin-fa`, a
-  near-silence gate against hallucinated fragments, and a client paint
-  of the raw `fa` dropdown option as فارسی. Covered by
-  `scripts/stt-fa-check.mjs` (allowlist, manifest pins, WAV guards,
-  mocked host wiring, silence gate); live whisper inference smoke-tested
-  against the real model.
-
 ### Fixed
 
 - Todo panel now reads RTL like the chat/queue/question surfaces: the panel

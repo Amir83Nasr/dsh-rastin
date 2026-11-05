@@ -28,7 +28,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/self-check.mjs",
-    "test": "node scripts/direction-check.mjs && node scripts/orient-check.mjs && node scripts/stt-fa-check.mjs && pnpm build && node scripts/self-check.mjs",
+    "test": "node scripts/direction-check.mjs && node scripts/orient-check.mjs && pnpm build && node scripts/self-check.mjs",
     "prepack": "node scripts/build.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -61,8 +61,5 @@
   },
   "devDependencies": {
     "prettier": "3.9.9"
-  },
-  "dependencies": {
-    "sherpa-onnx-node": "^1.13.8"
   }
 }

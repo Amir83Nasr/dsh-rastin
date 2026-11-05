@@ -1,5 +1,3 @@
 - insert:
     - id: rastin
       name: '@amir83nasr/dsh-rastin'
-      config:
-        dataRoot: !!js dshHomePath('speech-to-text', 'rastin-fa')
