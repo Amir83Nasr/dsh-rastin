@@ -54,6 +54,7 @@ assert.deepEqual(mod.inject, ['slots']);
 
 const noop = () => {};
 const capturedEffects = [];
+const capturedCleanups = [];
 const mockCtx = {
   slots: {
     inject: (name, cb) => {
@@ -70,28 +71,60 @@ const mockCtx = {
     capturedEffects.push(label);
     const cleanup = fn();
     assert.equal(typeof cleanup, 'function', `effect ${label} returns cleanup`);
+    capturedCleanups.push({ label, cleanup });
     return noop;
   },
 };
-// Host Config: line spacing tunable from Settings (1 tight .. 3 airy, default 2).
+// Host Config: line spacing tunable from Settings (1 tight .. 3 airy, default 2),
+// prose alignment (start default / justify), plus central chat width
+// (100 full / 75 / 50, default 100).
 {
   const host = await import('../src/index.js');
   assert.equal(typeof host.apply, 'function');
   assert.ok(host.Config, 'host exports Config');
-  assert.deepEqual(host.Config({}), { lineHeight: 2 });
-  assert.deepEqual(host.Config({ lineHeight: 1.6 }), { lineHeight: 1.6 });
+  assert.deepEqual(host.Config({}), {
+    lineHeight: 2,
+    textAlign: 'start',
+    chatWidth: 100,
+  });
+  assert.deepEqual(host.Config({ lineHeight: 1.6 }), {
+    lineHeight: 1.6,
+    textAlign: 'start',
+    chatWidth: 100,
+  });
+  assert.deepEqual(host.Config({ textAlign: 'justify' }), {
+    lineHeight: 2,
+    textAlign: 'justify',
+    chatWidth: 100,
+  });
+  assert.deepEqual(host.Config({ chatWidth: 75 }), {
+    lineHeight: 2,
+    textAlign: 'start',
+    chatWidth: 75,
+  });
+  assert.deepEqual(host.Config({ chatWidth: 50 }), {
+    lineHeight: 2,
+    textAlign: 'start',
+    chatWidth: 50,
+  });
   assert.throws(() => host.Config({ lineHeight: 5 }));
   assert.throws(() => host.Config({ lineHeight: 0.5 }));
+  assert.throws(() => host.Config({ textAlign: 'wide' }));
+  assert.throws(() => host.Config({ chatWidth: 60 }));
+  assert.throws(() => host.Config({ chatWidth: 'wide' }));
 }
 
 mod.apply(mockCtx);
 
-// Style seat + terminal canvas-font patch + auto-direction + todo auto-open, all with cleanup.
+// Style seat + terminal canvas-font patch + auto-direction + composer
+// direction + todo auto-open + chat width, all with cleanup.
 assert.deepEqual(capturedEffects, [
   'rastin: style',
   'rastin: terminal-font',
   'rastin: auto-direction',
+  'rastin: composer-direction',
   'rastin: todo open',
+  'rastin: chat-width',
 ]);
 
 // Canvas font patch: rewrites only sidebar-terminal canvases, restores on cleanup.
@@ -138,14 +171,154 @@ assert.equal(typeof captured.regs[0].comp, 'function');
   };
   const base = cssOf(captured.regs[0].comp);
   assert.match(base, /\[data-plan-preview\]\{line-height:2\}/);
+  // Lists (ordered and unordered) follow the same spacing, enforced on the
+  // descendants because host typography sets its own li line-height.
+  assert.match(base, /:is\(ul,ol,li\)\{line-height:2!important\}/);
+  // Ordered lists in RTL (Persian) seats use Persian digit markers.
+  assert.match(base, /\[data-chat-flow\] \[dir='rtl'\] ol/);
+  assert.match(base, /list-style-type: persian/);
 
   mod.apply(mockCtx, { lineHeight: 1.6 });
   assert.equal(captured.regs.length, 2);
   assert.match(cssOf(captured.regs[1].comp), /line-height:1\.6/);
+  assert.match(
+    cssOf(captured.regs[1].comp),
+    /:is\(ul,ol,li\)\{line-height:1\.6!important\}/,
+  );
 
   mod.apply(mockCtx, { lineHeight: 99 });
   assert.equal(captured.regs.length, 3);
   assert.match(cssOf(captured.regs[2].comp), /line-height:3\}/);
+}
+
+// Paragraph alignment (settings: textAlign): start emits no rule (the var
+// fallback covers it), justify sets --rastin-align on the prose containers.
+{
+  const cssOf = (comp) => {
+    const el = comp();
+    return el.type(el.props).children.join('');
+  };
+  assert.match(cssOf(captured.regs[0].comp), /var\(--rastin-align, start\)/);
+  assert.doesNotMatch(cssOf(captured.regs[0].comp), /--rastin-align:justify/);
+  mod.apply(mockCtx, { textAlign: 'justify' });
+  const css = cssOf(captured.regs[captured.regs.length - 1].comp);
+  assert.match(css, /--rastin-align:justify/);
+  mod.apply(mockCtx, { textAlign: 'wide' });
+  assert.doesNotMatch(
+    cssOf(captured.regs[captured.regs.length - 1].comp),
+    /--rastin-align:justify/,
+  );
+}
+
+// Composer input follows its own leading run with no lock: typing flips dir
+// live, clearing the box removes dir again, cleanup detaches the listener.
+{
+  const listeners = {};
+  const removed = [];
+  const fakeInput = {
+    value: 'سلام دنیا',
+    getAttribute(k) {
+      return this[`@${k}`] ?? null;
+    },
+    setAttribute(k, v) {
+      this[`@${k}`] = v;
+    },
+    removeAttribute(k) {
+      delete this[`@${k}`];
+    },
+    closest(sel) {
+      return sel === '[data-composer-input]' ? this : null;
+    },
+  };
+  const origQSA = globalThis.document.querySelectorAll;
+  const origAEL = globalThis.document.addEventListener;
+  const origREL = globalThis.document.removeEventListener;
+  const origMO = globalThis.MutationObserver;
+  globalThis.document.querySelectorAll = (sel) =>
+    sel === '[data-composer-input]' ? [fakeInput] : [];
+  globalThis.document.addEventListener = (type, fn) => {
+    listeners[type] = fn;
+  };
+  globalThis.document.removeEventListener = (type) => {
+    removed.push(type);
+  };
+  globalThis.MutationObserver = class {
+    observe() {}
+    disconnect() {}
+  };
+  try {
+    const cleanupsBefore = capturedCleanups.length;
+    mod.apply(mockCtx, {});
+    // Sweep oriented the Persian value.
+    assert.equal(fakeInput['@dir'], 'rtl');
+    // Typing English flips live (no LTR lock in the composer).
+    fakeInput.value = 'Here is the fix';
+    listeners['input']({ target: fakeInput });
+    assert.equal(fakeInput['@dir'], 'ltr');
+    // A lone English term stays RTL.
+    fakeInput.value = 'Merge کن';
+    listeners['input']({ target: fakeInput });
+    assert.equal(fakeInput['@dir'], 'rtl');
+    // Clearing removes dir so the placeholder falls back to the host.
+    fakeInput.value = '';
+    listeners['input']({ target: fakeInput });
+    assert.equal(fakeInput['@dir'], undefined);
+    // Cleanup detaches the document listener.
+    const composerCleanup = capturedCleanups
+      .slice(cleanupsBefore)
+      .find((c) => c.label === 'rastin: composer-direction').cleanup;
+    composerCleanup();
+    assert.ok(removed.includes('input'));
+  } finally {
+    globalThis.document.querySelectorAll = origQSA;
+    if (origAEL === undefined) delete globalThis.document.addEventListener;
+    else globalThis.document.addEventListener = origAEL;
+    if (origREL === undefined) delete globalThis.document.removeEventListener;
+    else globalThis.document.removeEventListener = origREL;
+    if (origMO === undefined) delete globalThis.MutationObserver;
+    else globalThis.MutationObserver = origMO;
+  }
+}
+
+// Central chat width (settings: chatWidth) scales the host conversation vars
+// from a saved copy; 100 is the identity default, 75/50 narrow the column.
+// Body attribute drives the static rules so only the value needs an effect.
+{
+  const cssOf = (comp) => {
+    const el = comp();
+    return el.type(el.props).children.join('');
+  };
+  const base = cssOf(captured.regs[0].comp);
+  assert.match(base, /body\[data-rastin-chat-width='75'\]/);
+  assert.match(base, /--rastin-conversation-scale: 0\.75/);
+  assert.match(base, /body\[data-rastin-chat-width='50'\]/);
+  assert.match(base, /--rastin-conversation-scale: 0\.5/);
+  assert.match(base, /\[data-phase\][\s\S]*\[data-conversation-content\]/);
+  assert.match(base, /--rastin-host-content-width/);
+  assert.match(base, /--dsh-chat-content-width: calc\(/);
+  assert.match(base, /--dsh-composer-card-max-width: calc\(/);
+
+  const attrs = {};
+  globalThis.document.body = {
+    setAttribute: (k, v) => {
+      attrs[k] = v;
+    },
+    removeAttribute: (k) => {
+      delete attrs[k];
+    },
+  };
+  const cleanupsBefore = capturedCleanups.length;
+  mod.apply(mockCtx, { chatWidth: 75 });
+  assert.equal(attrs['data-rastin-chat-width'], '75');
+  const widthCleanup = capturedCleanups
+    .slice(cleanupsBefore)
+    .find((c) => c.label === 'rastin: chat-width').cleanup;
+  widthCleanup();
+  assert.equal(attrs['data-rastin-chat-width'], undefined);
+  mod.apply(mockCtx, { chatWidth: 60 });
+  assert.equal(attrs['data-rastin-chat-width'], '100');
+  mod.apply(mockCtx, {});
+  assert.equal(attrs['data-rastin-chat-width'], '100');
 }
 
 // Face + direction + LTR-code rules present; real embedded font, no placeholder.
@@ -232,6 +405,19 @@ assert.match(src, /todo-panel.*text-align: start/s);
 assert.match(src, /\[data-testid='todo-panel'\] li/);
 assert.match(src, /todo-panel.*\[class\*='count'\]/s);
 
+// Central chat width: body attribute scales the host conversation vars.
+assert.match(src, /installChatWidth/);
+assert.match(src, /normalizeChatWidth/);
+assert.match(src, /data-rastin-chat-width/);
+assert.match(src, /rastin: chat-width/);
+
+// Composer direction + prose alignment + RTL tables.
+assert.match(src, /installComposerDirection/);
+assert.match(src, /\[data-composer-input\]/);
+assert.match(src, /rastin: composer-direction/);
+assert.match(src, /--rastin-align/);
+assert.match(src, /:is\(th, td, caption\)/);
+
 console.log(
-  'OK: 1 style seat, IranYekanX embedded, RTL on chat+queue+questions+todos, LTR code, FiraMonoNerd on terminal, todo open by default, line spacing from settings',
+  'OK: 1 style seat, IranYekanX embedded, RTL on chat+queue+questions+todos, LTR code, FiraMonoNerd on terminal, todo open by default, line spacing + chat width + prose alignment from settings, persian list markers, rtl tables, composer direction',
 );

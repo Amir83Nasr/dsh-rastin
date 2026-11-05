@@ -153,9 +153,12 @@ window.__ModuleLoader__.load({
 [data-plan-preview]:not([dir]) {
   direction: rtl;
 }
+/* Prose alignment reads --rastin-align (settings: textAlign sets it to justify
+   on the containers; fallback start). Chrome rules below keep their own
+   explicit alignment. */
 [data-document-markdown],
 [data-plan-preview] {
-  text-align: start;
+  text-align: var(--rastin-align, start);
   font-family: var(--dsw-font-family);
 }
 /* Message text follows its own leading word run: installAutoDirection writes
@@ -193,7 +196,7 @@ window.__ModuleLoader__.load({
 [data-testid='todo-panel'] [class*='item'],
 [data-testid='todo-panel'] [class*='row'],
 [data-testid='todo-panel'] li {
-  text-align: start;
+  text-align: var(--rastin-align, start);
 }
 /* User bubbles stay on the right under RTL: host aligns the row/stack
    columns with flex-end (right in LTR, left in RTL), so flip those two
@@ -258,11 +261,71 @@ window.__ModuleLoader__.load({
   direction: inherit;
   unicode-bidi: isolate;
 }
+/* Composer input follows its own leading run (installComposerDirection
+   writes dir from the current value); start aligns the text to it. */
+[data-composer-input] {
+  text-align: start;
+}
+/* Ordered lists inside RTL (Persian) seats use Persian digit markers (۱۲۳…);
+   LTR seats keep Western numerals. Scoped to auto-directed seats (dir), so
+   the direction verdict — not container CSS — decides the numerals. */
+[data-chat-flow] [dir='rtl'] ol,
+[data-document-markdown][dir='rtl'] ol,
+[data-plan-preview][dir='rtl'] ol,
+[data-testid='todo-panel'][dir='rtl'] ol,
+[data-testid='todo-panel'] [dir='rtl'] ol,
+[data-plan-review-key] [dir='rtl'] ol {
+  list-style-type: persian;
+}
+/* Tables inside RTL (Persian) seats keep RTL column order with start-aligned
+   cells and captions; LTR seats are untouched. Scoped to auto-directed seats
+   (dir) like the Persian markers above. */
+[data-chat-flow] [dir='rtl'] table,
+[data-document-markdown][dir='rtl'] table,
+[data-plan-preview][dir='rtl'] table,
+[data-testid='todo-panel'][dir='rtl'] table,
+[data-testid='todo-panel'] [dir='rtl'] table,
+[data-plan-review-key] [dir='rtl'] table {
+  direction: rtl;
+}
+[data-chat-flow] [dir='rtl'] :is(th, td, caption),
+[data-document-markdown][dir='rtl'] :is(th, td, caption),
+[data-plan-preview][dir='rtl'] :is(th, td, caption),
+[data-testid='todo-panel'][dir='rtl'] :is(th, td, caption),
+[data-testid='todo-panel'] [dir='rtl'] :is(th, td, caption),
+[data-plan-review-key] [dir='rtl'] :is(th, td, caption) {
+  text-align: start;
+}
 /* Sidebar chrome (workspace header, session/history rows) has no host
    data- hook and no slot seat, so no rule targets it: class-based selectors
    would break on the next host rename.
    ponytail: ceiling is host cooperation (a data- attr or slot on the
    sidebar browser region); upgrade path: add the rule when DSH exposes one. */
+/* Central chat width (settings: chatWidth). The host sizes the conversation
+   through --dsh-chat-content-width / --dsh-composer-card-max-width on
+   [data-phase] > [data-conversation-content] > *; narrowing overrides those
+   vars from a saved copy of the host values (self-reference would be
+   guaranteed-invalid), scaled by body[data-rastin-chat-width]. 100 keeps
+   scale 1 (identity) so the default changes nothing. */
+body[data-rastin-chat-width='75'] {
+  --rastin-conversation-scale: 0.75;
+}
+body[data-rastin-chat-width='50'] {
+  --rastin-conversation-scale: 0.5;
+}
+body[data-rastin-chat-width] [data-phase] > [data-conversation-content] {
+  --rastin-host-content-width: var(--dsh-chat-content-width);
+  --rastin-host-card-max-width: var(--dsh-composer-card-max-width);
+}
+body[data-rastin-chat-width] [data-phase] > [data-conversation-content] > * {
+  --dsh-chat-content-width: calc(
+    var(--rastin-host-content-width) * var(--rastin-conversation-scale, 1)
+  ) !important;
+  --dsh-composer-card-max-width: calc(
+    var(--rastin-host-card-max-width) - var(--rastin-host-content-width) *
+      (1 - var(--rastin-conversation-scale, 1))
+  ) !important;
+}
 `;
 
     const TERMINAL_FACE = 'FiraMonoNerd';
@@ -341,11 +404,31 @@ window.__ModuleLoader__.load({
       "[data-tool='ask_user_question'],[data-testid='todo-panel']," +
       '[data-document-markdown],[data-plan-preview]';
     function spacingCss(lineHeight) {
-      return `${SPACING_SELECTOR}{line-height:${normalizeLineHeight(lineHeight)}}`;
+      const v = normalizeLineHeight(lineHeight);
+      // Host typography sets its own li line-height, which is why lists
+      // render tighter than the container value — so restate it on list
+      // descendants (ordered and unordered alike); the container rule above
+      // stays at normal specificity.
+      return (
+        `${SPACING_SELECTOR}{line-height:${v}}` +
+        `${SPACING_SELECTOR} :is(ul,ol,li){line-height:${v}!important}`
+      );
     }
 
-    function RastinStyle({ lineHeight }) {
-      return h('style', { 'data-rastin': '' }, css + spacingCss(lineHeight));
+    // Paragraph alignment (settings: textAlign). Only 'justify' emits a rule:
+    // it sets --rastin-align on the prose containers, which the prose
+    // text-align rules above read via var(--rastin-align, start).
+    function alignCss(textAlign) {
+      if (textAlign !== 'justify') return '';
+      return `${SPACING_SELECTOR}{--rastin-align:justify}`;
+    }
+
+    function RastinStyle({ lineHeight, textAlign }) {
+      return h(
+        'style',
+        { 'data-rastin': '' },
+        css + spacingCss(lineHeight) + alignCss(textAlign),
+      );
     }
 
     // Each seat's own prose decides its dir (tool-call/command/code islands
@@ -476,6 +559,72 @@ window.__ModuleLoader__.load({
       };
     }
 
+    // Composer input follows its own leading run: the box orients from the
+    // current value on every input event, with no LTR lock — clearing the box
+    // removes dir so the placeholder falls back to the host. Arrow mirroring
+    // stays a render-time concern (seats only); a field value cannot hold
+    // mirror spans.
+    // ponytail: ceiling is the host hook ([data-composer-input]); upgrade
+    // path: a slot prop for the draft text when the host adds one.
+    const COMPOSER_SELECTOR = '[data-composer-input]';
+    function orientComposerInput(el) {
+      const text =
+        typeof el.value === 'string' ? el.value : (el.textContent ?? '');
+      const verdict = detectSeatDir(text);
+      if (verdict === null) {
+        el.removeAttribute('dir');
+        return;
+      }
+      if (el.getAttribute('dir') !== verdict.dir)
+        el.setAttribute('dir', verdict.dir);
+    }
+    function installComposerDirection() {
+      if (
+        typeof document === 'undefined' ||
+        typeof MutationObserver === 'undefined'
+      )
+        return () => {};
+      if (!document.querySelectorAll) return () => {};
+      const sweep = () => {
+        for (const el of document.querySelectorAll(COMPOSER_SELECTOR))
+          orientComposerInput(el);
+      };
+      sweep();
+      const onInput = (e) => {
+        const t = e && e.target;
+        const el =
+          t !== null && typeof t === 'object' && typeof t.closest === 'function'
+            ? t.closest(COMPOSER_SELECTOR)
+            : null;
+        if (el) orientComposerInput(el);
+      };
+      const listen =
+        typeof document.addEventListener === 'function'
+          ? document.addEventListener.bind(document)
+          : null;
+      if (listen) listen('input', onInput, true);
+      const obs = new MutationObserver((records) => {
+        for (const record of records) {
+          if (record.type !== 'childList') continue;
+          for (const node of record.addedNodes ?? []) {
+            if (node.nodeType !== 1 || typeof node.matches !== 'function')
+              continue;
+            if (node.matches(COMPOSER_SELECTOR)) orientComposerInput(node);
+            else if (node.querySelectorAll)
+              for (const el of node.querySelectorAll(COMPOSER_SELECTOR))
+                orientComposerInput(el);
+          }
+        }
+      });
+      if (document.body)
+        obs.observe(document.body, { childList: true, subtree: true });
+      return () => {
+        obs.disconnect();
+        if (listen && typeof document.removeEventListener === 'function')
+          document.removeEventListener('input', onInput, true);
+      };
+    }
+
     // Host TodoPanel mounts collapsed (useState(true)) with no config switch,
     // so open each panel on first sight. Per-panel once: later user collapse
     // stays collapsed (panel already seen, no reopen on unrelated sweeps).
@@ -512,23 +661,52 @@ window.__ModuleLoader__.load({
       };
     }
 
+    // Central chat width (settings: chatWidth). Only 100/75/50 are accepted;
+    // anything else falls back to the default. apply() writes the value to
+    // body[data-rastin-chat-width] so the static width rules above scale the
+    // host content-width vars; cleanup removes the attribute.
+    const CHAT_WIDTH_DEFAULT = 100;
+    function normalizeChatWidth(value) {
+      const n = typeof value === 'number' ? value : Number(value);
+      if (n === 75 || n === 50 || n === 100) return n;
+      return CHAT_WIDTH_DEFAULT;
+    }
+    function installChatWidth(chatWidth) {
+      if (typeof document === 'undefined') return () => {};
+      const body = document.body;
+      if (!body || typeof body.setAttribute !== 'function') return () => {};
+      const v = String(normalizeChatWidth(chatWidth));
+      body.setAttribute('data-rastin-chat-width', v);
+      return () => {
+        if (typeof body.removeAttribute === 'function')
+          body.removeAttribute('data-rastin-chat-width');
+      };
+    }
+
     return {
       inject: ['slots'],
       apply(ctx, config) {
         const lineHeight = normalizeLineHeight(config?.lineHeight);
+        const textAlign = config?.textAlign === 'justify' ? 'justify' : 'start';
+        const chatWidth = normalizeChatWidth(config?.chatWidth);
         ctx.effect(
           () =>
             ctx.slots.inject('shell.overlay', () =>
               ctx.slots.register(
                 { name: 'shell.overlay', id: 'rastin-style' },
-                () => h(RastinStyle, { lineHeight }),
+                () => h(RastinStyle, { lineHeight, textAlign }),
               ),
             ),
           'rastin: style',
         );
         ctx.effect(() => installTerminalFont(), 'rastin: terminal-font');
         ctx.effect(() => installAutoDirection(), 'rastin: auto-direction');
+        ctx.effect(
+          () => installComposerDirection(),
+          'rastin: composer-direction',
+        );
         ctx.effect(() => autoOpenTodoPanels(), 'rastin: todo open');
+        ctx.effect(() => installChatWidth(chatWidth), 'rastin: chat-width');
       },
     };
   },

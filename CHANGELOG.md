@@ -9,11 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Central chat width setting: the bundle now declares a `chatWidth` option
+  (100 full width by default, or 75 / 50 percent) in its plugin Config,
+  tunable from the Settings UI or `cordis.patch.yml`. It scales the host
+  conversation vars (`--dsh-chat-content-width` /
+  `--dsh-composer-card-max-width` on `[data-phase] > [data-conversation-content]`)
+  via `body[data-rastin-chat-width]`, so transcript and composer narrow
+  together. Covered by new `self-check` Config, rendered-CSS, and
+  body-attribute assertions.
+
 - Line-spacing setting: the bundle now declares a `lineHeight` option (1–3,
   default 2) in its plugin Config, tunable from the Settings UI or
   `cordis.patch.yml` and applied as `line-height` to the chat, queue,
   question, todo, and markdown surfaces. Covered by new `self-check` Config
   and rendered-CSS assertions.
+- Lists follow the line spacing too (same `lineHeight` value, enforced on
+  `ul`/`ol`/`li` descendants), and ordered lists in RTL (Persian) seats
+  render Persian digit markers (`list-style-type: persian`) while LTR seats
+  keep Western numerals. Covered by new `self-check` rendered-CSS
+  assertions.
+- Prose alignment setting: the bundle now declares a `textAlign` option
+  (`start` by default, or `justify`) in its plugin Config, applied via
+  `--rastin-align` to chat and markdown surfaces. Covered by new
+  `self-check` Config and rendered-CSS assertions.
+- Composer auto-direction: the main input box (`[data-composer-input]`)
+  follows its own leading word run while typing, with no LTR lock — clearing
+  it removes `dir` so the placeholder falls back to the host. Covered by new
+  `self-check` behavioral assertions.
+- RTL tables: tables inside RTL (Persian) seats keep RTL column order with
+  start-aligned cells and captions (`th`/`td`/`caption`). Covered by new
+  `self-check` static assertions.
 
 ### Fixed
 
