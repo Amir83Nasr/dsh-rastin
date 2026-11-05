@@ -12,6 +12,7 @@ Cordis bundle for the DeepSeek Harness Web GUI: Persian RTL layout with embedded
 - **Todo dock opens by default** — host mounts it collapsed; the bundle clicks each new panel open once (user can re-collapse; an already-seen panel is never reopened).
 - **LTR islands** — code blocks, tool-call/command rows, changed-files cards, and process-status labels stay LTR inside the RTL surfaces.
 - **RTL arrow mirror** — flow arrows (← → ⇐ ⇒) in RTL prose point the RTL way via a per-glyph mirror span; copy text stays intact.
+- **Persian voice input** — `rastin-fa-local` speech provider (Whisper base int8, explicit `fa` hint). DSH's built-in SenseVoice voice input only covers zh/en/ja/ko/yue; this one hears Persian.
 
 ## Install
 
@@ -50,6 +51,20 @@ Edit `src/client.template.js` — never `client.js` directly.
 - `fonts/` — embedded faces (`.woff2`).
 - `locale/` — bundle metadata (`en.json` / `fa.json`).
 - `client.js` — generated output (git-ignored).
+
+## Persian voice input
+
+Requires the official **Voice input** bundle enabled — it provides the
+speech service and the preferences UI this provider plugs into.
+
+1. Open voice-input settings → provider **Rastin Persian (Whisper base)** →
+   Prepare once (downloads ~160 MB of pinned models to
+   `~/.dsh/speech-to-text/rastin-fa`, works offline afterwards).
+2. Pick language **فارسی** (`fa`; `auto` also works for mixed speech).
+3. Record — Persian transcribes locally.
+
+Notes: short utterances work best; near-silence returns empty text instead
+of hallucinated fragments.
 
 ## How it works
 
