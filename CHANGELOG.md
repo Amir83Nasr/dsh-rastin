@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Todo panel now reads RTL like the chat/queue/question surfaces: the panel
+  gets the product face with RTL geometry, and each todo item follows its own
+  leading word run (pure-English todos flip back to LTR, lone English terms
+  stay RTL), with the same arrow-mirror, LTR-code, selection-tint, and
+  counter-bidi rules. Covered by new `orient-check` todo cases plus
+  `self-check` wiring assertions.
+
 ## [0.4.0] - 2026-11-04
 
 ### Fixed

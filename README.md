@@ -6,9 +6,10 @@ Cordis bundle for the DeepSeek Harness Web GUI: Persian RTL layout with embedded
 
 ## Features
 
-- **Persian RTL** — chat, queue, and question/plan-review surfaces read right-to-left on the IranYekanX face, shipped as base64 woff2 inside the bundle.
+- **Persian RTL** — chat, queue, question/plan-review, and todo surfaces read right-to-left on the IranYekanX face, shipped as base64 woff2 inside the bundle.
+- **Per-seat auto-direction** — each message (and each todo item) follows its own leading word run: a real English opening reads LTR while a lone English term ("Merge کن") stays RTL.
 - **Sidebar terminal font** — FiraMono Nerd Font Mono. xterm draws on canvas, so CSS alone can't restyle glyphs; the bundle embeds the face and patches the canvas 2d `font` setter scoped to `[data-sidebar-terminal]`.
-- **Todo dock opens by default** — host mounts it collapsed; the bundle clicks it open once (user can re-collapse).
+- **Todo dock opens by default** — host mounts it collapsed; the bundle clicks each new panel open once (user can re-collapse; an already-seen panel is never reopened).
 - **LTR islands** — code blocks, tool-call/command rows, changed-files cards, and process-status labels stay LTR inside the RTL surfaces.
 - **RTL arrow mirror** — flow arrows (← → ⇐ ⇒) in RTL prose point the RTL way via a per-glyph mirror span; copy text stays intact.
 
@@ -53,8 +54,9 @@ Edit `src/client.template.js` — never `client.js` directly.
 ## How it works
 
 - One style seat on `shell.overlay` (`rastin-style`) injects `@font-face` + RTL rules.
+- `installAutoDirection()` writes each seat's `dir` from its leading word run (LTR islands excluded) and mirrors flow arrows in RTL prose; streaming ticks re-run the verdict, a settled 2+ word LTR run locks.
 - `installTerminalFont()` patches `CanvasRenderingContext2D.font`, scoped to the sidebar terminal; reverts on cleanup.
-- `autoOpenTodoPanels()` observes the DOM and opens collapsed todo panels once; disconnects on cleanup.
+- `autoOpenTodoPanels()` observes the DOM and opens each new collapsed todo panel once; disconnects on cleanup.
 
 ## Release
 

@@ -56,9 +56,9 @@ window.__ModuleLoader__.load({
   --dsw-font-family: 'IRANYekanX', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
-/* Transcript, queue, and question surfaces read RTL on the product face. */
+/* Transcript, queue, question, and todo surfaces read RTL on the product face. */
 [data-chat-flow], [data-queue-dock], [data-question-key], [data-plan-review-key],
-[data-tool='ask_user_question'] {
+[data-tool='ask_user_question'], [data-testid='todo-panel'] {
   direction: rtl;
   font-family: var(--dsw-font-family);
 }
@@ -109,6 +109,34 @@ window.__ModuleLoader__.load({
   direction: rtl;
   text-align: right;
 }
+/* Todo panel: host mounts it LTR with no RTL hook of its own, so the bundle
+   owns the geometry (same pattern as queue-dock/question-key). The panel
+   itself stays RTL; each item's own leading run (installAutoDirection below)
+   flips pure-English todos back to LTR via text-align: start. */
+[data-testid='todo-panel'] {
+  text-align: right;
+}
+[data-testid='todo-panel'] [class*='header'] {
+  text-align: right !important;
+}
+[data-testid='todo-panel'] [class*='item'],
+[data-testid='todo-panel'] [class*='row'],
+[data-testid='todo-panel'] li {
+  padding-left: 8px !important;
+  padding-right: 12px !important;
+  text-align: start;
+}
+[data-testid='todo-panel'] [class*='title'],
+[data-testid='todo-panel'] [class*='label'],
+[data-testid='todo-panel'] [class*='description'],
+[data-testid='todo-panel'] [class*='content'] {
+  text-align: start;
+}
+[data-testid='todo-panel'] textarea,
+[data-testid='todo-panel'] [class*='editor'] {
+  direction: rtl;
+  text-align: right;
+}
 /* Process status titles + live running status stay LTR so English labels anchor left. */
 [data-step-process] [data-process-activity],
 [data-turn-process],
@@ -146,7 +174,8 @@ window.__ModuleLoader__.load({
 [data-chat-flow] [data-pending-steering] [data-rastin-mirror],
 [data-document-markdown] [data-rastin-mirror],
 [data-plan-preview] [data-rastin-mirror],
-[data-plan-review-key] [data-rastin-mirror] {
+[data-plan-review-key] [data-rastin-mirror],
+[data-testid='todo-panel'] [data-rastin-mirror] {
   display: inline-block;
   transform: scaleX(-1);
 }
@@ -160,7 +189,10 @@ window.__ModuleLoader__.load({
 [data-chat-flow] [data-pending-steering],
 [data-plan-review-key] [class*='summary'],
 [data-plan-review-key] [class*='title'],
-[data-plan-review-key] [class*='description'] {
+[data-plan-review-key] [class*='description'],
+[data-testid='todo-panel'] [class*='item'],
+[data-testid='todo-panel'] [class*='row'],
+[data-testid='todo-panel'] li {
   text-align: start;
 }
 /* User bubbles stay on the right under RTL: host aligns the row/stack
@@ -204,7 +236,8 @@ window.__ModuleLoader__.load({
 [data-question-key] pre, [data-question-key] code,
 [data-plan-review-key] pre, [data-plan-review-key] code,
 [data-document-markdown] pre, [data-document-markdown] code,
-[data-plan-preview] pre, [data-plan-preview] code {
+[data-plan-preview] pre, [data-plan-preview] code,
+[data-testid='todo-panel'] pre, [data-testid='todo-panel'] code {
   direction: ltr;
   unicode-bidi: isolate;
   text-align: left;
@@ -214,12 +247,14 @@ window.__ModuleLoader__.load({
 [data-chat-flow] ::selection,
 [data-queue-dock] ::selection,
 [data-question-key] ::selection,
-[data-plan-review-key] ::selection {
+[data-plan-review-key] ::selection,
+[data-testid='todo-panel'] ::selection {
   background: color-mix(in srgb, var(--dsw-alias-brand-primary) 30%, transparent);
 }
-/* Persian digits and units inside queue counters inherit the seat's RTL so
+/* Persian digits and units inside queue/todo counters inherit the seat's RTL so
    "۳ مورد" never mirrors to "مورد ۳". */
-[data-queue-dock] [class*='count'] {
+[data-queue-dock] [class*='count'],
+[data-testid='todo-panel'] [class*='count'] {
   direction: inherit;
   unicode-bidi: isolate;
 }
@@ -314,7 +349,11 @@ window.__ModuleLoader__.load({
       '[data-document-markdown],' +
       '[data-plan-preview],' +
       "[data-plan-review-key] [class*='title']," +
-      "[data-plan-review-key] [class*='description']";
+      "[data-plan-review-key] [class*='description']," +
+      "[data-testid='todo-panel']," +
+      "[data-testid='todo-panel'] [class*='item']," +
+      "[data-testid='todo-panel'] [class*='row']," +
+      "[data-testid='todo-panel'] li";
     function installAutoDirection() {
       if (
         typeof document === 'undefined' ||
@@ -438,9 +477,7 @@ window.__ModuleLoader__.load({
           seen.add(panel);
           const btn =
             typeof panel.querySelector === 'function'
-              ? panel.querySelector(
-                  ':scope > button[aria-expanded="false"], :scope button[aria-expanded="false"]',
-                )
+              ? panel.querySelector(':scope button[aria-expanded="false"]')
               : null;
           if (btn !== null && btn !== undefined) btn.click();
         }
@@ -451,6 +488,34 @@ window.__ModuleLoader__.load({
         obs.observe(document.body, { childList: true, subtree: true });
       return () => {
         if (obs) obs.disconnect();
+      };
+    }
+
+    // Voice-input preferences render each provider language as
+    // <option value="fa">fa</option> (the host has no Persian display
+    // name for it), so paint it as فارسی on sight. Scoped to the exact
+    // value our provider registers; other options stay untouched.
+    // ponytail: ceiling is DOM-level (no slot prop exposes option labels);
+    // upgrade path: host languageNames entry for fa when DSH adds one.
+    function relabelFaLanguage() {
+      if (
+        typeof document === 'undefined' ||
+        typeof MutationObserver === 'undefined'
+      )
+        return () => {};
+      const LABEL = 'فارسی';
+      const paint = () => {
+        if (!document.querySelectorAll) return;
+        for (const option of document.querySelectorAll('option[value="fa"]')) {
+          if (option.textContent !== LABEL) option.textContent = LABEL;
+        }
+      };
+      paint();
+      const obs = new MutationObserver(paint);
+      if (document.body)
+        obs.observe(document.body, { childList: true, subtree: true });
+      return () => {
+        obs.disconnect();
       };
     }
 
@@ -470,6 +535,7 @@ window.__ModuleLoader__.load({
         ctx.effect(() => installTerminalFont(), 'rastin: terminal-font');
         ctx.effect(() => installAutoDirection(), 'rastin: auto-direction');
         ctx.effect(() => autoOpenTodoPanels(), 'rastin: todo open');
+        ctx.effect(() => relabelFaLanguage(), 'rastin: fa-label');
       },
     };
   },

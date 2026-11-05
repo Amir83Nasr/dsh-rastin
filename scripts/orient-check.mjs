@@ -202,6 +202,33 @@ const arrowIsland = elem('div', {
 });
 assert.equal(mirrorSeatArrows(arrowIsland, makeDoc()), 0);
 
+// Todo items orient like chat seats: checkbox/status chrome carries no text,
+// so the item prose alone decides (mirrors the bundle's SEAT_SELECTOR,
+// which covers the panel plus item/row/li seats).
+function todoItem(text) {
+  return elem('li', {
+    children: [elem('input', { children: [] }), textNode(text)],
+  });
+}
+const todoFa = todoItem('بررسی راست‌چین پنل todos');
+todoFa.textContent = 'بررسی راست‌چین پنل todos';
+assert.equal(orient(todoFa), 'write');
+assert.equal(todoFa.getAttribute('dir'), 'rtl');
+assert.equal(mirrorSeatArrows(todoFa, makeDoc()), 0);
+
+const todoEn = todoItem('Fix the RTL alignment');
+todoEn.textContent = 'Fix the RTL alignment';
+assert.equal(orient(todoEn), 'write');
+assert.equal(todoEn.getAttribute('dir'), 'ltr');
+assert.equal(todoEn.getAttribute('data-rastin-dir'), 'ltr');
+
+const todoArrow = todoItem('خروجی → صف → شروع');
+todoArrow.textContent = 'خروجی → صف → شروع';
+orient(todoArrow);
+assert.equal(todoArrow.getAttribute('dir'), 'rtl');
+assert.equal(mirrorSeatArrows(todoArrow, makeDoc()), 1);
+assert.equal(mirrorSeatArrows(todoArrow, makeDoc()), 0);
+
 console.log(
   'OK: auto-direction orient (streaming, lock, idempotent, fallback, islands, arrow mirror)',
 );

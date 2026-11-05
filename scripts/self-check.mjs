@@ -81,6 +81,7 @@ assert.deepEqual(capturedEffects, [
   'rastin: terminal-font',
   'rastin: auto-direction',
   'rastin: todo open',
+  'rastin: fa-label',
 ]);
 
 // Canvas font patch: rewrites only sidebar-terminal canvases, restores on cleanup.
@@ -197,6 +198,15 @@ assert.match(src, /autoOpenTodoPanels/);
 assert.match(src, /\[data-testid="todo-panel"\]/);
 assert.match(src, /button\[aria-expanded="false"\]/);
 
+// Voice-input language dropdown shows our `fa` hint raw; paint it فارسی.
+assert.match(src, /relabelFaLanguage/);
+assert.match(src, /option\[value="fa"\]/);
+// Todo panel reads RTL like chat+queue+questions, with per-item leading-run direction.
+assert.match(src, /\[data-testid='todo-panel'\]/);
+assert.match(src, /todo-panel.*text-align: start/s);
+assert.match(src, /\[data-testid='todo-panel'\] li/);
+assert.match(src, /todo-panel.*\[class\*='count'\]/s);
+
 console.log(
-  'OK: 1 style seat, IranYekanX embedded, RTL on chat+queue+questions, LTR code, FiraMonoNerd on terminal, todo open by default',
+  'OK: 1 style seat, IranYekanX embedded, RTL on chat+queue+questions+todos, LTR code, FiraMonoNerd on terminal, todo open by default',
 );
