@@ -323,8 +323,29 @@ window.__ModuleLoader__.load({
       return cleanup;
     }
 
-    function RastinStyle() {
-      return h('style', { 'data-rastin': '' }, css);
+    // Line spacing (settings: lineHeight). A unitless line-height multiplier
+    // for the Persian prose surfaces; missing or out-of-range values fall
+    // back to the default. Editing the setting restarts the plugin, so
+    // apply() rebuilds this style seat with the new value.
+    const LINE_HEIGHT_DEFAULT = 2;
+    function normalizeLineHeight(value) {
+      const n = typeof value === 'number' ? value : Number(value);
+      if (!Number.isFinite(n)) return LINE_HEIGHT_DEFAULT;
+      return Math.min(3, Math.max(1, n));
+    }
+    // Keep in sync with the RTL surface selectors of the base rule above
+    // (transcript, queue, question, plan-review, ask_user_question, todos)
+    // plus the markdown surfaces, which share the product face.
+    const SPACING_SELECTOR =
+      '[data-chat-flow],[data-queue-dock],[data-question-key],[data-plan-review-key],' +
+      "[data-tool='ask_user_question'],[data-testid='todo-panel']," +
+      '[data-document-markdown],[data-plan-preview]';
+    function spacingCss(lineHeight) {
+      return `${SPACING_SELECTOR}{line-height:${normalizeLineHeight(lineHeight)}}`;
+    }
+
+    function RastinStyle({ lineHeight }) {
+      return h('style', { 'data-rastin': '' }, css + spacingCss(lineHeight));
     }
 
     // Each seat's own prose decides its dir (tool-call/command/code islands
@@ -493,13 +514,14 @@ window.__ModuleLoader__.load({
 
     return {
       inject: ['slots'],
-      apply(ctx) {
+      apply(ctx, config) {
+        const lineHeight = normalizeLineHeight(config?.lineHeight);
         ctx.effect(
           () =>
             ctx.slots.inject('shell.overlay', () =>
               ctx.slots.register(
                 { name: 'shell.overlay', id: 'rastin-style' },
-                RastinStyle,
+                () => h(RastinStyle, { lineHeight }),
               ),
             ),
           'rastin: style',

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Line-spacing setting: the bundle now declares a `lineHeight` option (1–3,
+  default 2) in its plugin Config, tunable from the Settings UI or
+  `cordis.patch.yml` and applied as `line-height` to the chat, queue,
+  question, todo, and markdown surfaces. Covered by new `self-check` Config
+  and rendered-CSS assertions.
+
 ### Fixed
 
 - Todo panel now reads RTL like the chat/queue/question surfaces: the panel

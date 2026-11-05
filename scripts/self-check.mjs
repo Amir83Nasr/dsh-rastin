@@ -73,6 +73,17 @@ const mockCtx = {
     return noop;
   },
 };
+// Host Config: line spacing tunable from Settings (1 tight .. 3 airy, default 2).
+{
+  const host = await import('../src/index.js');
+  assert.equal(typeof host.apply, 'function');
+  assert.ok(host.Config, 'host exports Config');
+  assert.deepEqual(host.Config({}), { lineHeight: 2 });
+  assert.deepEqual(host.Config({ lineHeight: 1.6 }), { lineHeight: 1.6 });
+  assert.throws(() => host.Config({ lineHeight: 5 }));
+  assert.throws(() => host.Config({ lineHeight: 0.5 }));
+}
+
 mod.apply(mockCtx);
 
 // Style seat + terminal canvas-font patch + auto-direction + todo auto-open, all with cleanup.
@@ -117,6 +128,25 @@ assert.equal(captured.regs.length, 1);
 assert.equal(captured.regs[0].slot, 'shell.overlay');
 assert.equal(captured.regs[0].id, 'rastin-style');
 assert.equal(typeof captured.regs[0].comp, 'function');
+
+// Line spacing (settings: lineHeight) lands in the rendered CSS: default 2,
+// custom values pass through, out-of-range values clamp to 1..3.
+{
+  const cssOf = (comp) => {
+    const el = comp();
+    return el.type(el.props).children.join('');
+  };
+  const base = cssOf(captured.regs[0].comp);
+  assert.match(base, /\[data-plan-preview\]\{line-height:2\}/);
+
+  mod.apply(mockCtx, { lineHeight: 1.6 });
+  assert.equal(captured.regs.length, 2);
+  assert.match(cssOf(captured.regs[1].comp), /line-height:1\.6/);
+
+  mod.apply(mockCtx, { lineHeight: 99 });
+  assert.equal(captured.regs.length, 3);
+  assert.match(cssOf(captured.regs[2].comp), /line-height:3\}/);
+}
 
 // Face + direction + LTR-code rules present; real embedded font, no placeholder.
 const src = readFileSync(new URL('../client.js', import.meta.url), 'utf8');
@@ -203,5 +233,5 @@ assert.match(src, /\[data-testid='todo-panel'\] li/);
 assert.match(src, /todo-panel.*\[class\*='count'\]/s);
 
 console.log(
-  'OK: 1 style seat, IranYekanX embedded, RTL on chat+queue+questions+todos, LTR code, FiraMonoNerd on terminal, todo open by default',
+  'OK: 1 style seat, IranYekanX embedded, RTL on chat+queue+questions+todos, LTR code, FiraMonoNerd on terminal, todo open by default, line spacing from settings',
 );

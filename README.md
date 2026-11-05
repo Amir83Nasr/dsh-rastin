@@ -10,6 +10,7 @@ Cordis bundle for the DeepSeek Harness Web GUI: Persian RTL layout with embedded
 - **Per-seat auto-direction** — each message (and each todo item) follows its own leading word run: a real English opening reads LTR while a lone English term ("Merge کن") stays RTL.
 - **Sidebar terminal font** — FiraMono Nerd Font Mono. xterm draws on canvas, so CSS alone can't restyle glyphs; the bundle embeds the face and patches the canvas 2d `font` setter scoped to `[data-sidebar-terminal]`.
 - **Todo dock opens by default** — host mounts it collapsed; the bundle clicks each new panel open once (user can re-collapse; an already-seen panel is never reopened).
+- **Adjustable line spacing** — `lineHeight` (1–3, default 2) for the Persian prose surfaces, tunable from the Settings UI (plugin config) or `cordis.patch.yml`.
 - **LTR islands** — code blocks, tool-call/command rows, changed-files cards, and process-status labels stay LTR inside the RTL surfaces.
 - **RTL arrow mirror** — flow arrows (← → ⇐ ⇒) in RTL prose point the RTL way via a per-glyph mirror span; copy text stays intact.
 

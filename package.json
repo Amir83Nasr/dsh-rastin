@@ -61,5 +61,8 @@
   },
   "devDependencies": {
     "prettier": "3.9.9"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.19.0"
   }
 }
